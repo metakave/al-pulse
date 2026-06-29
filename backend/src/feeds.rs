@@ -42,4 +42,12 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "Synced Review",
         url: "https://syncedreview.com/feed/",
     },
+    NewsFeedSource {
+        name: "TechCrunch Layoffs",
+        url: "https://techcrunch.com/tag/layoffs/feed/",
+    },
+    NewsFeedSource {
+        name: "Wired",
+        url: "https://www.wired.com/feed/category/business/latest/rss",
+    },
 ];

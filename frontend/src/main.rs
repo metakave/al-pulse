@@ -1,4 +1,5 @@
 use leptos::*;
+use leptos_router::*;
 use gloo_net::http::Request;
 use serde::{Deserialize, Serialize};
 
@@ -205,9 +206,44 @@ fn is_job_displacement(title: &str, summary: &str) -> bool {
     text.contains("downsizing") || text.contains("job displacement")
 }
 
+#[component]
+fn AboutPage() -> impl IntoView {
+    view! {
+        <div class="container about-container">
+            <header class="about-header">
+                <h1 class="about-title">"About AI Pulse"</h1>
+                <p class="about-subtitle">"Bilingual Curation & Tech Insights"</p>
+            </header>
+            <div class="about-body">
+                <p class="about-paragraph">
+                    "AI Pulse is a curated intelligence platform dedicated to aggregating, analyzing, and synthesizing artificial intelligence news from around the globe. In an era where technological advancements shift daily, keeping pace with generative models, LLMs, robotic automations, policies, and industry transformations can be overwhelming. AI Pulse aims to simplify that landscape by providing clean, condensed, and accessible bilingual summaries."
+                </p>
+                <p class="about-paragraph">
+                    "This platform operates with a built-in automated polling system that crawls authoritative global tech channels every 30 minutes, translates key updates into Bengali using real-time endpoints, and auto-categorizes articles. Special attention is given to tracking automation's impact on employment, highlighting job layoffs and displacement warnings."
+                </p>
+                <p class="about-paragraph">
+                    "The ideation, design, and technical execution of this curation project was done by "
+                    <strong>"Sadiq M Alam"</strong>
+                    ", Enterprise AI Consultant, with the goal of keeping people updated about AI News from all over the world."
+                </p>
+                <a href="/" class="about-back-btn">
+                    "← Back to Feed"
+                </a>
+            </div>
+        </div>
+    }
+}
+
 fn main() {
     console_error_panic_hook::set_once();
-    mount_to_body(|| view! { <App /> });
+    mount_to_body(|| view! {
+        <Router>
+            <Routes>
+                <Route path="" view=App />
+                <Route path="/about" view=AboutPage />
+            </Routes>
+        </Router>
+    });
 }
 
 #[component]
@@ -710,6 +746,18 @@ fn App() -> impl IntoView {
                     })
                 }}
             </main>
+
+            /* Persistent Footer */
+            <footer class="app-footer">
+                <div class="footer-content">
+                    <p class="footer-text">
+                        "AI Pulse - Curated Intelligence // Idea & Execution by Sadiq M Alam, Enterprise AI Consultant // For inquiry get in touch at "
+                        <a href="mailto:hello@sadiqalam.com" class="footer-link">"hello@sadiqalam.com"</a>
+                        " // "
+                        <a href="/about" target="_blank" class="footer-link">"About"</a>
+                    </p>
+                </div>
+            </footer>
 
             /* Floating Toasts */
             <div class="toast-container">

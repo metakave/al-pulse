@@ -35,12 +35,12 @@
 }
 
 [data-theme="light"] {
-  --bg-color: #f8fafc;
-  --panel-bg: rgba(255, 255, 255, 0.8);
+  --bg-color: #f5f2eb;
+  --panel-bg: rgba(248, 246, 240, 0.85); /* coordinated beige-white overlay */
   --panel-border: rgba(15, 23, 42, 0.08);
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-primary: #1e1b18; /* softer brown-black for premium contrast */
+  --text-secondary: #574f46;
+  --text-muted: #8c8275;
   
   /* Brighten gradients for light background readability */
   --primary-gradient: linear-gradient(135deg, #6366f1 0%, #0891b2 100%);
@@ -775,4 +775,95 @@ body {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
+}
+
+/* Footer Section Styling */
+.app-footer {
+  margin-block-start: 4rem;
+  padding-block: 2rem;
+  border-block-start: 1px solid var(--panel-border);
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.footer-text {
+  line-height: 1.8;
+  max-inline-size: 800px;
+  margin-inline: auto;
+}
+
+.footer-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 600;
+  transition: var(--transition-smooth);
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+  color: var(--accent-cyan);
+}
+
+/* About Page Content Styling */
+.about-container {
+  max-inline-size: 700px;
+  margin-inline: auto;
+  padding-block: 3rem;
+}
+
+.about-header {
+  margin-block-end: 2.5rem;
+  border-block-end: 1px solid var(--panel-border);
+  padding-block-end: 1.5rem;
+}
+
+.about-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-block-end: 0.5rem;
+}
+
+.about-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.about-body {
+  font-size: 1.05rem;
+  line-height: 1.85;
+}
+
+.about-paragraph {
+  margin-block-end: 1.5rem;
+  color: var(--text-primary);
+}
+
+.about-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 10px 20px;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  margin-block-start: 1rem;
+  transition: var(--transition-smooth);
+}
+
+.about-back-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
 }

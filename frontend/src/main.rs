@@ -539,17 +539,17 @@ fn App() -> impl IntoView {
                         let since_last = stats.since_last_sync;
                         
                         let text = if lang.get() == Language::En {
-                            format!("{} AI News articles curated, {} new since last sync", total, since_last)
+                            format!("{} AI News articles curated, {} new since last sync. Next sync in ", total, since_last)
                         } else {
-                            format!("মোট {}টি এআই সংবাদ সংকলিত, শেষ সিঙ্কের পর {}টি নতুন খবর", translate_digits(total as i64), translate_digits(since_last as i64))
+                            format!("মোট {}টি এআই সংবাদ সংকলিত, শেষ সিঙ্কের পর {}টি নতুন খবর। পরবর্তী সিঙ্ক হতে বাকি ", translate_digits(total as i64), translate_digits(since_last as i64))
                         };
 
                         view! {
                             <div class="stats-banner">
-                                <span class="stats-text">{text}</span>
-                                <span class="stats-separator">{" · "}</span>
-                                <span class="stats-sync-label">{" "}</span>
-                                <span class="stats-countdown">{format_countdown}</span>
+                                <span class="stats-text">
+                                    {text}
+                                    <span class="stats-countdown">{format_countdown}</span>
+                                </span>
                             </div>
                         }.into_view()
                     }

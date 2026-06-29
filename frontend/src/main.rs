@@ -492,9 +492,7 @@ fn App() -> impl IntoView {
                             <div class="stats-banner">
                                 <span class="stats-text">{text}</span>
                                 <span class="stats-separator">{" · "}</span>
-                                <span class="stats-sync-label">
-                                    {move || if lang.get() == Language::En { "Next sync in " } else { "পরবর্তী সিঙ্ক " }}
-                                </span>
+                                <span class="stats-sync-label">{" "}</span>
                                 <span class="stats-countdown">{format_countdown}</span>
                             </div>
                         }.into_view()

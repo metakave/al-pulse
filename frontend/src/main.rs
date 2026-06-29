@@ -134,6 +134,10 @@ fn translate_source(lang: Language, src: &str) -> String {
         "Inc42" => "আইএনসি৪২".to_string(),
         "ProPakistani" => "প্রোপাকিস্তানি".to_string(),
         "Daily FT" => "ডেইলি এফটি".to_string(),
+        "OpenAI Newsroom" => "ওপেনএআই নিউজরুম".to_string(),
+        "Google Research AI Blog" => "গুগল রিসার্চ এআই ব্লগ".to_string(),
+        "Hugging Face Blog" => "হাগিং ফেস ব্লগ".to_string(),
+        "Ahead of AI" => "অ্যাহেড অব এআই".to_string(),
         _ => src.to_string(),
     }
 }

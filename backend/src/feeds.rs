@@ -48,7 +48,23 @@ pub const FEEDS: &[NewsFeedSource] = &[
     },
     NewsFeedSource {
         name: "Wired",
-        url: "https://www.wired.com/feed/category/business/latest/rss",
+        url: "https://www.wired.com/feed/tag/ai/latest/rss",
+    },
+    NewsFeedSource {
+        name: "OpenAI Newsroom",
+        url: "https://openai.com/news/rss.xml",
+    },
+    NewsFeedSource {
+        name: "Google Research AI Blog",
+        url: "https://blog.google/technology/ai/rss/",
+    },
+    NewsFeedSource {
+        name: "Hugging Face Blog",
+        url: "https://huggingface.co/blog/feed.xml",
+    },
+    NewsFeedSource {
+        name: "Ahead of AI",
+        url: "https://magazine.sebastianraschka.com/feed",
     },
     // South Asia AI/Layoffs and local news sources
     NewsFeedSource {

@@ -1,6 +1,10 @@
 # Rust build outputs
 target/
 
+# Environment secrets
+.env
+backend/.env
+
 # Trunk build output — keep dist committed for Vercel static serving
 # frontend/dist/
 

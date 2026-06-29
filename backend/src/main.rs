@@ -25,6 +25,9 @@ struct AppState {
 
 #[tokio::main]
 async fn main() {
+    // Load .env file for local development (no-op if not present)
+    dotenvy::dotenv().ok();
+
     // 1. Initialize PostgreSQL Database
     let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
         "postgres://postgres:postgres@localhost:5432/ai_news".to_string()

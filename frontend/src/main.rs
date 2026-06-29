@@ -1,4 +1,6 @@
 use leptos::*;
+mod footer;
+use crate::footer::Footer;
 use leptos_router::*;
 use gloo_net::http::Request;
 use serde::{Deserialize, Serialize};
@@ -238,9 +240,10 @@ fn main() {
     console_error_panic_hook::set_once();
     mount_to_body(|| view! {
         <Router>
-            <Routes fallback=|| view! { "Page not found." }>
-                <Route path="" view=App />
-                <Route path="/about" view=AboutPage />
+            <Routes>
+                <Route path="" view=|| view! { <App /> } />
+                <Route path="/about" view=|| view! { <AboutPage /> } />
+                <Route path="*any" view=|| view! { "Page not found." } />
             </Routes>
         </Router>
     });
@@ -339,7 +342,24 @@ fn App() -> impl IntoView {
         }
     });
 
-    // 5. Initial hook to load synchronization status
+    // 6. Shuffling mechanism: triggers random card ordering every 45 seconds
+    let (shuffle_seed, set_shuffle_seed) = create_signal(0usize);
+    let (is_fading, set_is_fading) = create_signal(false);
+    
+    create_effect(move |_| {
+        let _ = set_interval_with_handle(move || {
+            // Step 1: Start fade out
+            set_is_fading.set(true);
+            
+            // Step 2: Swap order and fade in after a brief delay
+            set_timeout(move || {
+                set_shuffle_seed.update(|seed| *seed += 1);
+                set_is_fading.set(false);
+            }, std::time::Duration::from_millis(300));
+        }, std::time::Duration::from_secs(45));
+    });
+
+    // 7. Initial hook to load synchronization status
     create_effect(move |_| {
         spawn_local(async move {
             if let Ok(ts) = fetch_api_status().await {
@@ -599,113 +619,129 @@ fn App() -> impl IntoView {
                                         </div>
                                     }.into_view()
                                 } else {
-                                    view! {
-                                        <div class="news-grid">
-                                            {items.into_iter().map(|item| {
-                                                let current_lang = lang.get();
-                                                let item_id = item.id.clone();
-                                                let is_fav = item.is_favorite;
-                                                
-                                                // Scan job impact status from English texts
-                                                let job_loss = is_job_displacement(&item.title_en, &item.summary_en.clone().unwrap_or_default());
-                                                
-                                                // Localize text fields based on Language Switcher
-                                                let title_display = if current_lang == Language::Bn { item.title_bn.clone() } else { item.title_en.clone() };
-                                                let summary_display = if current_lang == Language::Bn { 
-                                                    item.summary_bn.clone().unwrap_or_default() 
-                                                } else { 
-                                                    item.summary_en.clone().unwrap_or_default() 
-                                                };
-                                                
-                                                let category_display = translate_category(current_lang, &item.category);
-                                                let source_display = translate_source(current_lang, &item.source);
-                                                let date_display = format_relative_time(current_lang, item.published_at);
-                                                
-                                                let cat_class = match item.category.as_str() {
-                                                    "LLMs & Generative AI" => "category-badge llm",
-                                                    "Robotics & Autonomous" => "category-badge robotics",
-                                                    "Industry & Tech Giants" => "category-badge giants",
-                                                    "Research & Science" => "category-badge research",
-                                                    "AI Ethics & Policy" => "category-badge ethics",
-                                                    "Job Impact" => "category-badge job-impact",
-                                                    _ => "category-badge",
-                                                };
-                                                
-                                                let card_classes = if job_loss { "news-card job-impact" } else { "news-card" };
-                                                let url_display = item.url.clone();
-                                                
-                                                let on_fav_toggle = move |e: web_sys::MouseEvent| {
-                                                    e.stop_propagation();
-                                                    let next_fav = !is_fav;
-                                                    
-                                                    // Optimistic UI updates
-                                                    let id_for_update = item_id.clone();
-                                                    news_resource.update(move |data| {
-                                                        if let Some(Ok(ref mut list)) = data {
-                                                            if let Some(target) = list.iter_mut().find(|i| i.id == id_for_update) {
-                                                                target.is_favorite = next_fav;
-                                                            }
-                                                        }
-                                                    });
+                                     // Shuffle items using a simple seed-based hashing selector
+                                     let mut shuffled_items = items;
+                                     let seed = shuffle_seed.get();
+                                     if seed > 0 {
+                                         // Deterministically pseudo-randomize item layout using their ID hashes
+                                         shuffled_items.sort_by(|a, b| {
+                                             let hash_a = a.id.chars().fold(seed, |acc, c| acc.wrapping_add(c as usize).wrapping_mul(31));
+                                             let hash_b = b.id.chars().fold(seed, |acc, c| acc.wrapping_add(c as usize).wrapping_mul(31));
+                                             hash_a.cmp(&hash_b)
+                                         });
+                                     }
 
-                                                    // Send backend updates
-                                                    let id_param = item_id.clone();
-                                                    spawn_local(async move {
-                                                        let payload = serde_json::json!({ "is_favorite": next_fav });
-                                                        let url = format!("/api/news/{}/favorite", id_param);
-                                                        match Request::post(&url)
-                                                            .header("Content-Type", "application/json")
-                                                            .json(&payload)
-                                                        {
-                                                            Ok(builder) => {
-                                                                if let Ok(response) = builder.send().await {
-                                                                    if response.ok() {
-                                                                        let toast_key = if next_fav { "toast_fav_added" } else { "toast_fav_removed" };
-                                                                        show_toast(localize(current_lang, toast_key));
-                                                                    } else {
-                                                                        show_toast("Failed to update favorites.");
-                                                                    }
-                                                                } else {
-                                                                    show_toast("Connection error.");
-                                                                }
-                                                            }
-                                                            Err(_) => show_toast("Error building request."),
-                                                        }
-                                                    });
-                                                };
+                                     view! {
+                                         <div class=move || if is_fading.get() { "news-grid grid-fade-out" } else { "news-grid" }>
+                                             {shuffled_items.into_iter().enumerate().map(|(idx, item)| {
+                                                 let current_lang = lang.get();
+                                                 let item_id = item.id.clone();
+                                                 let is_fav = item.is_favorite;
+                                                 
+                                                 // Scan job impact status from English texts
+                                                 let job_loss = is_job_displacement(&item.title_en, &item.summary_en.clone().unwrap_or_default());
+                                                 
+                                                 // Localize text fields based on Language Switcher
+                                                 let title_display = if current_lang == Language::Bn { item.title_bn.clone() } else { item.title_en.clone() };
+                                                 let summary_display = if current_lang == Language::Bn { 
+                                                     item.summary_bn.clone().unwrap_or_default() 
+                                                 } else { 
+                                                     item.summary_en.clone().unwrap_or_default() 
+                                                 };
+                                                 
+                                                 let category_display = translate_category(current_lang, &item.category);
+                                                 let source_display = translate_source(current_lang, &item.source);
+                                                 let date_display = format_relative_time(current_lang, item.published_at);
+                                                 
+                                                 let cat_class = match item.category.as_str() {
+                                                     "LLMs & Generative AI" => "category-badge llm",
+                                                     "Robotics & Autonomous" => "category-badge robotics",
+                                                     "Industry & Tech Giants" => "category-badge giants",
+                                                     "Research & Science" => "category-badge research",
+                                                     "AI Ethics & Policy" => "category-badge ethics",
+                                                     "Job Impact" => "category-badge job-impact",
+                                                     _ => "category-badge",
+                                                 };
+                                                 
+                                                 let card_classes = if job_loss { 
+                                                     if is_fading.get() { "news-card job-impact fading" } else { "news-card job-impact" } 
+                                                 } else { 
+                                                     if is_fading.get() { "news-card fading" } else { "news-card" }
+                                                 };
+                                                 let url_display = item.url.clone();
+                                                 
+                                                 let on_fav_toggle = move |e: web_sys::MouseEvent| {
+                                                     e.stop_propagation();
+                                                     let next_fav = !is_fav;
+                                                     
+                                                     // Optimistic UI updates
+                                                     let id_for_update = item_id.clone();
+                                                     news_resource.update(move |data| {
+                                                         if let Some(Ok(ref mut list)) = data {
+                                                             if let Some(target) = list.iter_mut().find(|i| i.id == id_for_update) {
+                                                                 target.is_favorite = next_fav;
+                                                             }
+                                                         }
+                                                     });
 
-                                                view! {
-                                                    <article class=card_classes>
-                                                        <div class="card-meta">
-                                                            <span class="source-badge">{source_display}</span>
-                                                            
-                                                            // Highlight with Job Impact Badge if flagged
-                                                            {if job_loss {
-                                                                view! {
-                                                                    <span class="job-impact-badge">
-                                                                        {move || localize(lang.get(), "job_impact_badge")}
-                                                                    </span>
-                                                                }.into_view()
-                                                            } else {
-                                                                view! {
-                                                                    <span class=cat_class>{category_display.clone()}</span>
-                                                                }.into_view()
-                                                            }}
-                                                            
-                                                            <button 
-                                                                class=move || if is_fav { "favorite-btn is-fav" } else { "favorite-btn" }
-                                                                on:click=on_fav_toggle
-                                                                title=if is_fav { "Remove from favorites" } else { "Save to favorites" }
-                                                            >
-                                                                <svg viewBox="0 0 24 24">
-                                                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                                                                </svg>
-                                                            </button>
-                                                        </div>
-                                                        
-                                                        <div class="card-content">
-                                                            <a class="card-title" href=url_display.clone() target="_blank" rel="noopener noreferrer">
-                                                                {title_display}
+                                                     // Send backend updates
+                                                     let id_param = item_id.clone();
+                                                     spawn_local(async move {
+                                                         let payload = serde_json::json!({ "is_favorite": next_fav });
+                                                         let url = format!("/api/news/{}/favorite", id_param);
+                                                         match Request::post(&url)
+                                                             .header("Content-Type", "application/json")
+                                                             .json(&payload)
+                                                         {
+                                                             Ok(builder) => {
+                                                                 if let Ok(response) = builder.send().await {
+                                                                     if response.ok() {
+                                                                         let toast_key = if next_fav { "toast_fav_added" } else { "toast_fav_removed" };
+                                                                         show_toast(localize(current_lang, toast_key));
+                                                                     } else {
+                                                                         show_toast("Failed to update favorites.");
+                                                                     }
+                                                                 } else {
+                                                                     show_toast("Connection error.");
+                                                                 }
+                                                             }
+                                                             Err(_) => show_toast("Error building request."),
+                                                         }
+                                                     });
+                                                 };
+
+                                                 view! {
+                                                     <article class=card_classes style=format!("order: {}", idx)>
+                                                         <div class="card-meta">
+                                                             <span class="source-badge">{source_display}</span>
+                                                             
+                                                             // Highlight with Job Impact Badge if flagged
+                                                             {if job_loss {
+                                                                 view! {
+                                                                     <span class="job-impact-badge">
+                                                                         {move || localize(lang.get(), "job_impact_badge")}
+                                                                     </span>
+                                                                 }.into_view()
+                                                             } else {
+                                                                 view! {
+                                                                     <span class=cat_class>{category_display.clone()}</span>
+                                                                 }.into_view()
+                                                             }}
+                                                             
+                                                             <button 
+                                                                 class=move || if is_fav { "favorite-btn is-fav" } else { "favorite-btn" }
+                                                                 on:click=on_fav_toggle
+                                                                 title=if is_fav { "Remove from favorites" } else { "Save to favorites" }
+                                                             >
+                                                                 <svg viewBox="0 0 24 24">
+                                                                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                                 </svg>
+                                                             </button>
+                                                         </div>
+                                                         
+                                                         <div class="card-content">
+                                                             <a class="card-title" href=url_display.clone() target="_blank" rel="noopener noreferrer">
+                                                                 {title_display}
                                                             </a>
                                                             <p class="card-summary">{summary_display}</p>
                                                         </div>
@@ -724,14 +760,10 @@ fn App() -> impl IntoView {
                                     }.into_view()
                                 }
                             }
-                            Err(err) => {
+                            Err(_) => {
                                 view! {
                                     <div class="empty-state" style="border-color: var(--favorite-color);">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--favorite-color)" stroke-width="1.5">
-                                            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                        </svg>
-                                        <h3>{move || localize(lang.get(), "sync_failed")}</h3>
-                                        <p>{err}</p>
+                                        <Footer />
                                     </div>
                                 }.into_view()
                             }
@@ -748,16 +780,8 @@ fn App() -> impl IntoView {
             </main>
 
             /* Persistent Footer */
-            <footer class="app-footer">
-                <div class="footer-content">
-                    <p class="footer-text">
-                        "AI Pulse - Curated Intelligence // Idea & Execution by Sadiq M Alam, Enterprise AI Consultant // For inquiry get in touch at "
-                        <a href="mailto:hello@sadiqalam.com" class="footer-link">"hello@sadiqalam.com"</a>
-                        " // "
-                        <a href="/about" target="_blank" class="footer-link">"About"</a>
-                    </p>
-                </div>
-            </footer>
+                        <Footer />
+
 
             /* Floating Toasts */
             <div class="toast-container">

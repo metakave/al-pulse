@@ -460,8 +460,6 @@ fn App() -> impl IntoView {
                     /* Sync Status Panel */
                     <div class="status-widget">
                         <div class=move || if trigger_sync_action.pending().get() { "status-indicator syncing" } else { "status-indicator" }></div>
-                        <span>{move || localize(lang.get(), "auto_sync")}</span>
-                        <span class="sync-time-text">{format_countdown}</span>
                         <button 
                             class="refresh-btn" 
                             disabled=move || trigger_sync_action.pending().get()
@@ -493,6 +491,11 @@ fn App() -> impl IntoView {
                         view! {
                             <div class="stats-banner">
                                 <span class="stats-text">{text}</span>
+                                <span class="stats-separator">{" · "}</span>
+                                <span class="stats-sync-label">
+                                    {move || if lang.get() == Language::En { "Next sync in " } else { "পরবর্তী সিঙ্ক " }}
+                                </span>
+                                <span class="stats-countdown">{format_countdown}</span>
                             </div>
                         }.into_view()
                     }

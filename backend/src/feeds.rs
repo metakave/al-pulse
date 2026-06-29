@@ -50,4 +50,29 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "Wired",
         url: "https://www.wired.com/feed/category/business/latest/rss",
     },
+    // South Asia AI/Layoffs and local news sources
+    NewsFeedSource {
+        name: "Google News India (AI/Layoffs)",
+        url: "https://news.google.com/rss/search?q=(artificial+intelligence+OR+AI)+(layoff+OR+layoffs+OR+job+cuts+OR+job+losses)+India&hl=en-IN&gl=IN&ceid=IN:en",
+    },
+    NewsFeedSource {
+        name: "Google News Pakistan (AI/Layoffs)",
+        url: "https://news.google.com/rss/search?q=(artificial+intelligence+OR+AI)+(layoff+OR+layoffs+OR+job+cuts+OR+job+losses)+Pakistan&hl=en-PK&gl=PK&ceid=PK:en",
+    },
+    NewsFeedSource {
+        name: "Google News Sri Lanka (AI/Layoffs)",
+        url: "https://news.google.com/rss/search?q=(artificial+intelligence+OR+AI)+(layoff+OR+layoffs+OR+job+cuts+OR+job+losses)+%22Sri+Lanka%22&hl=en-US&gl=US&ceid=US:en",
+    },
+    NewsFeedSource {
+        name: "Inc42",
+        url: "https://inc42.com/feed/",
+    },
+    NewsFeedSource {
+        name: "ProPakistani",
+        url: "https://propakistani.pk/category/tech/feed",
+    },
+    NewsFeedSource {
+        name: "Daily FT",
+        url: "https://www.ft.lk/rss/IT-Telecom-Tech",
+    },
 ];

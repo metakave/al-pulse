@@ -128,6 +128,12 @@ fn translate_source(lang: Language, src: &str) -> String {
         "Unite.AI" => "ইউনাইট.এআই".to_string(),
         "AI News" => "এআই নিউজ".to_string(),
         "MarkTechPost" => "মার্কটেকপোস্ট".to_string(),
+        "Google News India (AI/Layoffs)" => "গুগল নিউজ ইন্ডিয়া (এআই/লেঅফ)".to_string(),
+        "Google News Pakistan (AI/Layoffs)" => "গুগল নিউজ পাকিস্তান (এআই/লেঅফ)".to_string(),
+        "Google News Sri Lanka (AI/Layoffs)" => "গুগল নিউজ শ্রীলঙ্কা (এআই/লেঅফ)".to_string(),
+        "Inc42" => "আইএনসি৪২".to_string(),
+        "ProPakistani" => "প্রোপাকিস্তানি".to_string(),
+        "Daily FT" => "ডেইলি এফটি".to_string(),
         _ => src.to_string(),
     }
 }

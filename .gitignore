@@ -1,0 +1,14 @@
+# Rust build outputs
+target/
+
+# Trunk build output
+frontend/dist/
+
+# Local SQLite databases
+ai_news.db
+ai_news.db-journal
+ai_news.db-shm
+ai_news.db-wal
+
+# OS files
+.DS_Store

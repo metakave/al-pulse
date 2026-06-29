@@ -1,19 +1,8 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "backend/Cargo.toml",
-      "use": "@vercel/rust",
-      "config": {
-        "bin": "backend"
-      }
-    }
-  ],
+  "outputDirectory": "frontend/dist",
+  "buildCommand": "echo 'Frontend already pre-built in frontend/dist'",
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/backend/Cargo.toml"
-    },
     {
       "src": "/(.*)",
       "dest": "/frontend/dist/$1"

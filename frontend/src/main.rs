@@ -728,9 +728,15 @@ fn App() -> impl IntoView {
     }
 }
 
+// Returns the API base URL — empty string in local dev (relative), full URL in production
+fn api_base() -> String {
+    // Set VITE_API_URL (or API_URL) at build time for production, e.g. https://your-app.railway.app
+    option_env!("API_URL").unwrap_or("").to_string()
+}
+
 // Global API Helper: Fetch news from Backend
 async fn fetch_news(q: String, category: String, favorites: bool, archive: bool) -> Result<Vec<NewsItem>, String> {
-    let mut url = format!("/api/news?favorites={}&archive={}", favorites, archive);
+    let mut url = format!("{}/api/news?favorites={}&archive={}", api_base(), favorites, archive);
     if !q.is_empty() {
         let encoded_q = js_sys::encode_uri_component(&q);
         let q_str: String = encoded_q.into();
@@ -759,7 +765,8 @@ async fn fetch_news(q: String, category: String, favorites: bool, archive: bool)
 
 // Global API Helper: Fetch API Status
 async fn fetch_api_status() -> Result<i64, String> {
-    let response = Request::get("/api/status")
+    let url = format!("{}/api/status", api_base());
+    let response = Request::get(&url)
         .send()
         .await
         .map_err(|e| e.to_string())?;
@@ -783,7 +790,7 @@ async fn fetch_api_status() -> Result<i64, String> {
 
 // Global API Helper: Fetch news stats from Backend
 async fn fetch_stats(refresh_trigger: i32) -> Result<NewsStats, String> {
-    let url = format!("/api/news/stats?t={}", refresh_trigger);
+    let url = format!("{}/api/news/stats?t={}", api_base(), refresh_trigger);
     let response = Request::get(&url)
         .send()
         .await

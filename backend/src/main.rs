@@ -5,6 +5,10 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+
+// Export feed definitions for reuse
+mod feeds;
+use feeds::FEEDS;
 use serde::Deserialize;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -15,16 +19,18 @@ use tower_http::services::{ServeDir, ServeFile};
 mod db;
 
 struct AppState {
-    pool: sqlx::SqlitePool,
+    pool: sqlx::PgPool,
     last_refreshed_at: Mutex<i64>,
 }
 
 #[tokio::main]
 async fn main() {
-    // 1. Initialize SQLite Database
-    let database_url = "sqlite://ai_news.db";
-    println!("Initializing SQLite database at: {}", database_url);
-    let pool = db::init_db(database_url).await.expect("Failed to initialize database");
+    // 1. Initialize PostgreSQL Database
+    let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+        "postgres://postgres:postgres@localhost:5432/ai_news".to_string()
+    });
+    println!("Initializing PostgreSQL database...");
+    let pool = db::init_db(&database_url).await.expect("Failed to initialize database");
 
     // Pre-populate database on start if it's empty so the user doesn't see a blank page
     match db::get_news_items(&pool, None, None, false, false, 0).await {
@@ -86,6 +92,7 @@ async fn main() {
         .route("/api/news/refresh", post(manual_refresh_route))
         .route("/api/status", get(get_status))
         .route("/api/news/stats", get(get_news_stats_route))
+        .route("/api/feeds", get(get_feeds))
         .layer(cors)
         .fallback_service(serve_dir)
         .with_state(state);
@@ -188,6 +195,12 @@ async fn get_news_stats_route(State(state): State<Arc<AppState>>) -> impl IntoRe
     }
 }
 
+// New handler: return list of RSS feed sources
+async fn get_feeds() -> impl IntoResponse {
+    // Map FEEDS to simple name/url objects
+    let list: Vec<_> = FEEDS.iter().map(|f| serde_json::json!({"name": f.name, "url": f.url})).collect();
+    Json(list)
+}
 // Translation Helper: Calls keyless, public Google Translate API
 async fn translate_text(text: &str, target_lang: &str) -> String {
     let trimmed = text.trim();
@@ -235,43 +248,16 @@ async fn translate_text(text: &str, target_lang: &str) -> String {
     text.to_string()
 }
 
-struct NewsFeedSource {
-    name: &'static str,
-    url: &'static str,
+#[derive(Clone)]
+pub struct NewsFeedSource {
+    pub name: &'static str,
+    pub url: &'static str,
 }
 
-// Helper: Scans Google News RSS search and other AI news feeds, inserts results into SQLite
-async fn fetch_and_save_feeds(pool: &sqlx::SqlitePool) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let feeds = vec![
-        NewsFeedSource {
-            name: "Google News",
-            url: "https://news.google.com/rss/search?q=artificial+intelligence+OR+machine+learning+OR+generative+AI+OR+LLM&hl=en-US&gl=US&ceid=US:en",
-        },
-        NewsFeedSource {
-            name: "TechCrunch",
-            url: "https://techcrunch.com/category/artificial-intelligence/feed/",
-        },
-        NewsFeedSource {
-            name: "VentureBeat",
-            url: "https://venturebeat.com/category/ai/feed/",
-        },
-        NewsFeedSource {
-            name: "MIT Technology Review",
-            url: "https://www.technologyreview.com/topic/artificial-intelligence/feed/",
-        },
-        NewsFeedSource {
-            name: "Unite.AI",
-            url: "https://www.unite.ai/feed/",
-        },
-        NewsFeedSource {
-            name: "AI News",
-            url: "https://www.artificialintelligence-news.com/feed/",
-        },
-        NewsFeedSource {
-            name: "MarkTechPost",
-            url: "https://www.marktechpost.com/feed/",
-        },
-    ];
+// Helper: Scans Google News RSS search and other AI news feeds, inserts results into PostgreSQL
+async fn fetch_and_save_feeds(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    // Use the shared constant FEEDS defined in feeds.rs
+    let feeds = FEEDS.to_vec();
 
     let client = reqwest::Client::builder()
         .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")

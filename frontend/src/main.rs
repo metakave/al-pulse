@@ -485,7 +485,7 @@ fn App() -> impl IntoView {
                         let since_last = stats.since_last_sync;
                         
                         let text = if lang.get() == Language::En {
-                            format!("📊 {} AI News articles curated, {} new since last sync", total, since_last)
+                            format!("{} AI News articles curated, {} new since last sync", total, since_last)
                         } else {
                             format!("📊 মোট {}টি এআই সংবাদ সংকলিত, শেষ সিঙ্কের পর {}টি নতুন খবর", translate_digits(total as i64), translate_digits(since_last as i64))
                         };

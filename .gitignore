@@ -1,8 +1,8 @@
 # Rust build outputs
 target/
 
-# Trunk build output
-frontend/dist/
+# Trunk build output — keep dist committed for Vercel static serving
+# frontend/dist/
 
 # Local SQLite databases
 ai_news.db

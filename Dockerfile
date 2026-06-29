@@ -1,5 +1,5 @@
 # ---- Build stage ----
-FROM rust:1.82-slim AS builder
+FROM rust:1.87-slim AS builder
 
 # Install system deps required by sqlx + reqwest (openssl, pkg-config)
 RUN apt-get update && apt-get install -y \

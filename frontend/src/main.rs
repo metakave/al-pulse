@@ -238,7 +238,7 @@ fn main() {
     console_error_panic_hook::set_once();
     mount_to_body(|| view! {
         <Router>
-            <Routes>
+            <Routes fallback=|| view! { "Page not found." }>
                 <Route path="" view=App />
                 <Route path="/about" view=AboutPage />
             </Routes>

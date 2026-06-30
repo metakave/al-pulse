@@ -1083,3 +1083,81 @@ body {
   align-items: center;
   gap: 8px;
 }
+
+/* Changelog Styles */
+.changelog-body {
+  padding-block: 1rem;
+}
+
+.changelog-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  border-left: 2px solid var(--panel-border);
+  padding-left: 2rem;
+  margin-left: 1rem;
+  margin-bottom: 2rem;
+}
+
+.changelog-item {
+  position: relative;
+}
+
+.changelog-dot {
+  position: absolute;
+  left: -2.6rem;
+  top: 0.25rem;
+  width: 1rem;
+  height: 1rem;
+  background: var(--brand-gradient);
+  border-radius: 50%;
+  border: 4px solid var(--bg-color);
+  box-sizing: content-box;
+}
+
+.changelog-content {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--border-radius-md);
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.changelog-version {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.2rem;
+}
+
+.changelog-date {
+  font-size: 0.85rem;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.changelog-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.changelog-list li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.changelog-list li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--accent-color);
+  font-weight: bold;
+}

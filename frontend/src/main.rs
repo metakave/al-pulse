@@ -250,6 +250,104 @@ fn AboutPage() -> impl IntoView {
     }
 }
 
+#[component]
+fn ChangelogPage() -> impl IntoView {
+    view! {
+        <div class="container about-container">
+            <header class="about-header">
+                <h1 class="about-title">"Change Log"</h1>
+                <p class="about-subtitle">"Release notes and updates"</p>
+            </header>
+            <div class="changelog-body">
+                <div class="changelog-timeline">
+                    <div class="changelog-item">
+                        <div class="changelog-dot"></div>
+                        <div class="changelog-content">
+                            <div class="changelog-version">"AI PulseQ version 1.0.1"</div>
+                            <div class="changelog-date">"June 2026"</div>
+                            <ul class="changelog-list">
+                                <li>"Renamed application title to AI PulseQ."</li>
+                                <li>"Introduced a new sleek slide-in hamburger menu for desktop."</li>
+                                <li>"Optimized and cleaned up the mobile header layout."</li>
+                                <li>"Added this Change Log page to track future updates."</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="changelog-item">
+                        <div class="changelog-dot"></div>
+                        <div class="changelog-content">
+                            <div class="changelog-version">"AI Pulse version 1.0.0"</div>
+                            <div class="changelog-date">"Initial Release"</div>
+                            <ul class="changelog-list">
+                                <li>"Launched core functionality with automated news polling."</li>
+                                <li>"Bilingual curation with real-time translation."</li>
+                                <li>"Auto-categorization of news articles."</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <a href="/" class="about-back-btn">
+                    "← Back to Feed"
+                </a>
+            </div>
+        </div>
+    }
+}
+
+#[component]
+fn NewsSourcesPage() -> impl IntoView {
+    view! {
+        <div class="container about-container">
+            <header class="about-header">
+                <h1 class="about-title">"News Sources"</h1>
+                <p class="about-subtitle">"List of curated RSS feeds powering AI PulseQ (Excluding Google News aggregations)"</p>
+            </header>
+            <div class="sources-body">
+                <ul class="sources-list" style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem;">
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"TechCrunch"</strong>": "<a href="https://techcrunch.com/category/artificial-intelligence/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://techcrunch.com/category/artificial-intelligence/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"VentureBeat"</strong>": "<a href="https://venturebeat.com/category/ai/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://venturebeat.com/category/ai/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"MIT Technology Review"</strong>": "<a href="https://www.technologyreview.com/topic/artificial-intelligence/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.technologyreview.com/topic/artificial-intelligence/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Unite.AI"</strong>": "<a href="https://www.unite.ai/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.unite.ai/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"AI News"</strong>": "<a href="https://www.artificialintelligence-news.com/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.artificialintelligence-news.com/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"MarkTechPost"</strong>": "<a href="https://www.marktechpost.com/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.marktechpost.com/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"The AI Report"</strong>": "<a href="https://theaireport.com/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://theaireport.com/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"AI Trends"</strong>": "<a href="https://aitrends.com/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://aitrends.com/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Synced Review"</strong>": "<a href="https://syncedreview.com/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://syncedreview.com/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"TechCrunch Layoffs"</strong>": "<a href="https://techcrunch.com/tag/layoffs/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://techcrunch.com/tag/layoffs/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Wired"</strong>": "<a href="https://www.wired.com/feed/tag/ai/latest/rss" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.wired.com/feed/tag/ai/latest/rss"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"OpenAI Newsroom"</strong>": "<a href="https://openai.com/news/rss.xml" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://openai.com/news/rss.xml"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Google Research AI Blog"</strong>": "<a href="https://blog.google/technology/ai/rss/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://blog.google/technology/ai/rss/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Hugging Face Blog"</strong>": "<a href="https://huggingface.co/blog/feed.xml" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://huggingface.co/blog/feed.xml"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Ahead of AI"</strong>": "<a href="https://magazine.sebastianraschka.com/feed" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://magazine.sebastianraschka.com/feed"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Inc42"</strong>": "<a href="https://inc42.com/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://inc42.com/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"ProPakistani"</strong>": "<a href="https://propakistani.pk/category/tech/feed" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://propakistani.pk/category/tech/feed"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Daily FT"</strong>": "<a href="https://www.ft.lk/rss/IT-Telecom-Tech" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.ft.lk/rss/IT-Telecom-Tech"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Crunchbase News"</strong>": "<a href="https://news.crunchbase.com/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://news.crunchbase.com/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Anthropic News"</strong>": "<a href="https://www.anthropic.com/feed.xml" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.anthropic.com/feed.xml"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"InformationWeek"</strong>": "<a href="https://www.informationweek.com/rss.xml" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.informationweek.com/rss.xml"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Oracle News"</strong>": "<a href="https://www.oracle.com/news/rss/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.oracle.com/news/rss/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Amazon News"</strong>": "<a href="https://www.aboutamazon.com/news/rss.xml" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.aboutamazon.com/news/rss.xml"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Cisco Newsroom"</strong>": "<a href="https://newsroom.cisco.com/c/services/i/servlets/newsroom/rssfeed.json" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://newsroom.cisco.com/c/services/i/servlets/newsroom/rssfeed.json"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"PayPal News"</strong>": "<a href="https://newsroom.paypal-corp.com/news?template=rss" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://newsroom.paypal-corp.com/news?template=rss"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Cloudflare Blog"</strong>": "<a href="https://blog.cloudflare.com/rss" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://blog.cloudflare.com/rss"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Chegg Investor Relations"</strong>": "<a href="https://investor.chegg.com/rss" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://investor.chegg.com/rss"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"The American Bazaar"</strong>": "<a href="https://americanbazaaronline.com/feed/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://americanbazaaronline.com/feed/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Ars Technica"</strong>": "<a href="http://feeds.arstechnica.com/arstechnica/index" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"http://feeds.arstechnica.com/arstechnica/index"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"ZDNet"</strong>": "<a href="https://www.zdnet.com/news/rss.xml" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.zdnet.com/news/rss.xml"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"CNET"</strong>": "<a href="https://www.cnet.com/rss/news/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.cnet.com/rss/news/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"PCMag"</strong>": "<a href="https://www.pcmag.com/feeds/rss/latest" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.pcmag.com/feeds/rss/latest"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Engadget"</strong>": "<a href="https://www.engadget.com/rss.xml" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.engadget.com/rss.xml"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"The Verge"</strong>": "<a href="https://www.theverge.com/rss/index.xml" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.theverge.com/rss/index.xml"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Gizmodo"</strong>": "<a href="https://gizmodo.com/rss" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://gizmodo.com/rss"</a></li>
+                </ul>
+                <a href="/" class="about-back-btn" style="margin-top: 2rem;">
+                    "← Back to Feed"
+                </a>
+            </div>
+        </div>
+    }
+}
+
 fn main() {
     console_error_panic_hook::set_once();
     mount_to_body(|| view! { <App /> });
@@ -263,6 +361,8 @@ fn App() -> impl IntoView {
             <Routes>
                 <Route path="" view=|| view! { <Home /> } />
                 <Route path="/about" view=|| view! { <AboutPage /> } />
+                <Route path="/changelog" view=|| view! { <ChangelogPage /> } />
+                <Route path="/sources" view=|| view! { <NewsSourcesPage /> } />
                 <Route path="/:category" view=|| view! { <Home /> } />
                 <Route path="*any" view=|| view! { "Page not found." } />
             </Routes>
@@ -669,6 +769,12 @@ fn Home() -> impl IntoView {
                     </button>
                     <a href="/about" class="sidebar-tab-btn" on:click=move |_| set_is_menu_open.set(false)>
                         "About"
+                    </a>
+                    <a href="/changelog" class="sidebar-tab-btn" on:click=move |_| set_is_menu_open.set(false)>
+                        "Change Log"
+                    </a>
+                    <a href="/sources" class="sidebar-tab-btn" on:click=move |_| set_is_menu_open.set(false)>
+                        "News Sources"
                     </a>
                 </nav>
             </div>

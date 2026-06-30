@@ -58,7 +58,8 @@ pub async fn insert_news_item(pool: &PgPool, item: &NewsItem) -> Result<(), sqlx
              title_bn = EXCLUDED.title_bn,
              summary_en = EXCLUDED.summary_en,
              summary_bn = EXCLUDED.summary_bn,
-             category = EXCLUDED.category"
+             category = EXCLUDED.category,
+             source = EXCLUDED.source"
     )
     .bind(&item.id)
     .bind(&item.title_en)

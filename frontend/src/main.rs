@@ -56,7 +56,7 @@ enum Tab {
 fn localize(lang: Language, key: &str) -> &'static str {
     match lang {
         Language::En => match key {
-            "title" => "AI Pulse",
+            "title" => "AI PulseQ",
             "tagline" => "Curated Intelligence",
             "latest_news" => "Latest News",
             "archive" => "Archive",
@@ -69,7 +69,7 @@ fn localize(lang: Language, key: &str) -> &'static str {
             "no_articles_desc" => "Try refining your search query, selecting another category, or syncing fresh headlines.",
             "no_favorites_desc" => "Click the heart icon on any article to add it to your favorites.",
             "sync_failed" => "Sync Connection Failed",
-            "loading" => "Connecting to AI Pulse database...",
+            "loading" => "Connecting to AI PulseQ database...",
             "read" => "Read",
             "job_impact_badge" => "Job",
             _ => "",
@@ -227,12 +227,12 @@ fn AboutPage() -> impl IntoView {
     view! {
         <div class="container about-container">
             <header class="about-header">
-                <h1 class="about-title">"About AI Pulse"</h1>
+                <h1 class="about-title">"About AI PulseQ"</h1>
                 <p class="about-subtitle">"Bilingual Curation & Tech Insights"</p>
             </header>
             <div class="about-body">
                 <p class="about-paragraph">
-                    "AI Pulse is a curated intelligence platform dedicated to aggregating, analyzing, and synthesizing artificial intelligence news from around the globe. In an era where technological advancements shift daily, keeping pace with generative models, LLMs, robotic automations, policies, and industry transformations can be overwhelming. AI Pulse aims to simplify that landscape by providing clean, condensed, and accessible bilingual summaries."
+                    "AI PulseQ is a curated intelligence platform dedicated to aggregating, analyzing, and synthesizing artificial intelligence news from around the globe. In an era where technological advancements shift daily, keeping pace with generative models, LLMs, robotic automations, policies, and industry transformations can be overwhelming. AI PulseQ aims to simplify that landscape by providing clean, condensed, and accessible bilingual summaries."
                 </p>
                 <p class="about-paragraph">
                     "This platform operates with a built-in automated polling system that crawls authoritative global tech channels every 45 minutes, translates key updates into Bengali using real-time endpoints, and auto-categorizes articles. Special attention is given to tracking automation's impact on employment, highlighting job layoffs and displacement warnings."
@@ -312,6 +312,7 @@ fn Home() -> impl IntoView {
     });
     let (active_tab, set_active_tab) = create_signal(Tab::Latest);
     let (current_page, set_current_page) = create_signal(1usize);
+    let (is_menu_open, set_is_menu_open) = create_signal(false);
 
     create_effect(move |_| {
         // Track the inputs so we reset the page whenever they change
@@ -505,7 +506,7 @@ fn Home() -> impl IntoView {
     };
 
     view! {
-        <Title text=move || format!("{} News - AI Pulse", active_category.get()) />
+        <Title text=move || format!("{} News - AI PulseQ", active_category.get()) />
         <Meta name="description" content=move || format!("Latest curated news and insights about {} in the AI world.", active_category.get()) />
         <div class="container">
             <header class="app-header">
@@ -525,7 +526,93 @@ fn Home() -> impl IntoView {
                 </div>
 
                 <div class="nav-and-status">
-                    /* Language Switcher Toggle */
+                    /* Desktop controls: Theme + Lang stay OUTSIDE on desktop, hidden on mobile */
+                    <div class="desktop-controls">
+                        <div class="lang-switcher">
+                            <button 
+                                class=move || if lang.get() == Language::En { "lang-btn active" } else { "lang-btn" }
+                                on:click=move |_| set_lang.set(Language::En)
+                            >
+                                "EN"
+                            </button>
+                            <button 
+                                class=move || if lang.get() == Language::Bn { "lang-btn active" } else { "lang-btn" }
+                                on:click=move |_| set_lang.set(Language::Bn)
+                            >
+                                "বাংলা"
+                            </button>
+                        </div>
+
+                        <button 
+                            class="theme-toggle-btn"
+                            on:click=on_theme_toggle.clone()
+                            title=move || if lang.get() == Language::En { "Toggle theme" } else { "থিম পরিবর্তন করুন" }
+                        >
+                            {move || if theme.get() == Theme::Light {
+                                view! {
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+                                    </svg>
+                                }.into_view()
+                            } else {
+                                view! {
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L7.4 4.58a.996.996 0 00-1.41 0zM15.54 18.01a.996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06a.996.996 0 00-1.41 0zM7.05 18.01l-1.06 1.06a.996.996 0 101.41 1.41l1.06-1.06a.996.996 0 10-1.41-1.41zm11.35-13.43a.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.38-.38.38-1.02 0-1.41z"/>
+                                    </svg>
+                                }.into_view()
+                            }}
+                        </button>
+                    </div>
+
+                    /* Sync Status Panel */
+                    <div class="status-widget">
+                        <div class=move || if trigger_sync_action.pending().get() { "status-indicator syncing" } else { "status-indicator" }></div>
+                        <button 
+                            class="refresh-btn" 
+                            disabled=move || trigger_sync_action.pending().get()
+                            on:click=move |_| trigger_sync_action.dispatch(())
+                        >
+                            {move || if trigger_sync_action.pending().get() {
+                                view! { <span class="spin-icon">"⟳"</span> }.into_view()
+                            } else {
+                                view! { 
+                                    <>
+                                        <svg class="sync-icon-svg" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="23 4 23 10 17 10"></polyline>
+                                            <polyline points="1 20 1 14 7 14"></polyline>
+                                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                        </svg>
+                                        <span class="sync-text">{move || localize(lang.get(), "sync_now")}</span>
+                                    </>
+                                }.into_view()
+                            }}
+                        </button>
+                    </div>
+
+                    /* Hamburger Button */
+                    <button class="hamburger-btn" on:click=move |_| set_is_menu_open.update(|b| *b = !*b)>
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            /* Sidebar Menu */
+            <div class=move || if is_menu_open.get() { "sidebar-overlay open" } else { "sidebar-overlay" } on:click=move |_| set_is_menu_open.set(false)></div>
+            <div class=move || if is_menu_open.get() { "sidebar-menu open" } else { "sidebar-menu" }>
+                <div class="sidebar-header">
+                    <button class="close-menu-btn" on:click=move |_| set_is_menu_open.set(false)>
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="sidebar-mobile-controls">
                     <div class="lang-switcher">
                         <button 
                             class=move || if lang.get() == Language::En { "lang-btn active" } else { "lang-btn" }
@@ -540,11 +627,9 @@ fn Home() -> impl IntoView {
                             "বাংলা"
                         </button>
                     </div>
-
-                    /* Theme Switcher Toggle */
                     <button 
                         class="theme-toggle-btn"
-                        on:click=on_theme_toggle
+                        on:click=on_theme_toggle.clone()
                         title=move || if lang.get() == Language::En { "Toggle theme" } else { "থিম পরিবর্তন করুন" }
                     >
                         {move || if theme.get() == Theme::Light {
@@ -561,46 +646,32 @@ fn Home() -> impl IntoView {
                             }.into_view()
                         }}
                     </button>
-
-                    /* Nav Tabs (Feed vs Archive vs Favorites) */
-                    <div class="nav-tabs">
-                        <button 
-                            class=move || if active_tab.get() == Tab::Latest { "tab-btn active" } else { "tab-btn" }
-                            on:click=move |_| set_active_tab.set(Tab::Latest)
-                        >
-                            {move || localize(lang.get(), "latest_news")}
-                        </button>
-                        <button 
-                            class=move || if active_tab.get() == Tab::Archive { "tab-btn active" } else { "tab-btn" }
-                            on:click=move |_| set_active_tab.set(Tab::Archive)
-                        >
-                            {move || localize(lang.get(), "archive")}
-                        </button>
-                        <button 
-                            class=move || if active_tab.get() == Tab::Favorites { "tab-btn active" } else { "tab-btn" }
-                            on:click=move |_| set_active_tab.set(Tab::Favorites)
-                        >
-                            {move || localize(lang.get(), "my_favorites")}
-                        </button>
-                    </div>
-
-                    /* Sync Status Panel */
-                    <div class="status-widget">
-                        <div class=move || if trigger_sync_action.pending().get() { "status-indicator syncing" } else { "status-indicator" }></div>
-                        <button 
-                            class="refresh-btn" 
-                            disabled=move || trigger_sync_action.pending().get()
-                            on:click=move |_| trigger_sync_action.dispatch(())
-                        >
-                            {move || if trigger_sync_action.pending().get() {
-                                view! { <span class="spin-icon">"⟳"</span> }.into_view()
-                            } else {
-                                view! { <span>{move || localize(lang.get(), "sync_now")}</span> }.into_view()
-                            }}
-                        </button>
-                    </div>
                 </div>
-            </header>
+
+                <nav class="sidebar-nav">
+                    <button 
+                        class=move || if active_tab.get() == Tab::Latest { "sidebar-tab-btn active" } else { "sidebar-tab-btn" }
+                        on:click=move |_| { set_active_tab.set(Tab::Latest); set_is_menu_open.set(false); }
+                    >
+                        {move || localize(lang.get(), "latest_news")}
+                    </button>
+                    <button 
+                        class=move || if active_tab.get() == Tab::Archive { "sidebar-tab-btn active" } else { "sidebar-tab-btn" }
+                        on:click=move |_| { set_active_tab.set(Tab::Archive); set_is_menu_open.set(false); }
+                    >
+                        {move || localize(lang.get(), "archive")}
+                    </button>
+                    <button 
+                        class=move || if active_tab.get() == Tab::Favorites { "sidebar-tab-btn active" } else { "sidebar-tab-btn" }
+                        on:click=move |_| { set_active_tab.set(Tab::Favorites); set_is_menu_open.set(false); }
+                    >
+                        {move || localize(lang.get(), "my_favorites")}
+                    </button>
+                    <a href="/about" class="sidebar-tab-btn" on:click=move |_| set_is_menu_open.set(false)>
+                        "About"
+                    </a>
+                </nav>
+            </div>
 
             /* Statistics Banner */
             {move || stats_resource.get().map(|res| {

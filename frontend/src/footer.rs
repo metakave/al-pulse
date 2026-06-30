@@ -6,7 +6,7 @@ pub fn Footer() -> impl IntoView {
         <footer class="app-footer">
             <div class="footer-content">
                 <p class="footer-text">
-                    "AI Pulse - Curated Intelligence // Idea & Execution by "
+                    "AI PulseQ - Curated Intelligence // Idea & Execution by "
                     <a href="https://www.sadiqalam.com/ai-powered-business-transformation" target="_blank" rel="noopener noreferrer" class="footer-link">"Sadiq M Alam, Enterprise AI Consultant"</a>
                     " // For inquiry get in touch at "
                     <a href="mailto:hello@sadiqalam.com" class="footer-link">"hello@sadiqalam.com"</a>

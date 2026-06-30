@@ -127,11 +127,6 @@ body {
   position: relative;
   display: grid;
   place-content: center;
-  inline-size: 40px;
-  block-size: 40px;
-  background: var(--brand-gradient);
-  border-radius: var(--border-radius-md);
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
 }
 
 .brand-logo-icon {
@@ -769,6 +764,9 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+  }
+  .brand-text h1 {
+    font-size: 1.15rem;
   }
   .nav-and-status {
     flex-direction: row;

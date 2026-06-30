@@ -75,7 +75,7 @@ fn localize(lang: Language, key: &str) -> &'static str {
             _ => "",
         },
         Language::Bn => match key {
-            "title" => "এআই পালস",
+            "title" => "এআই পালসকিউ",
             "tagline" => "নির্বাচিত সংবাদ সংকলন",
             "latest_news" => "সর্বশেষ সংবাদ",
             "archive" => "আর্কাইভ",
@@ -88,7 +88,7 @@ fn localize(lang: Language, key: &str) -> &'static str {
             "no_articles_desc" => "অনুগ্রহ করে আপনার অনুসন্ধান পরিবর্তন করুন, অন্য ক্যাটাগরি বেছে নিন অথবা নতুন খবর সিঙ্ক করুন।",
             "no_favorites_desc" => "আপনার প্রিয় তালিকায় যুক্ত করতে যেকোনো খবরের হার্ট আইকনে ক্লিক করুন।",
             "sync_failed" => "সিঙ্ক সংযোগ ব্যর্থ হয়েছে",
-            "loading" => "এআই পালস ডাটাবেসের সাথে সংযুক্ত হচ্ছে...",
+            "loading" => "এআই পালসকিউ ডাটাবেসের সাথে সংযুক্ত হচ্ছে...",
             "read" => "পড়ুন",
             "job_impact_badge" => "কর্মসংস্থান প্রভাব",
             _ => "",
@@ -616,7 +616,7 @@ fn Home() -> impl IntoView {
             <header class="app-header">
                 <div class="brand-section">
                     <div class="brand-logo-container">
-                        <svg class="brand-logo-svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; color: #fff;">
+                        <svg class="brand-logo-svg" viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; color: #6366f1;">
                             <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
                             <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5 5 3Z"/>
                             <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5Z"/>

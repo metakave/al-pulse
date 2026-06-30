@@ -1046,7 +1046,9 @@ body {
 
 .sidebar-mobile-controls {
   display: none;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   margin-block-end: 2rem;
   padding-block-end: 2rem;

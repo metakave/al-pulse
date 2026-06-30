@@ -8,6 +8,7 @@
   --text-muted: #6b7280;
   
   /* Gradients */
+  --brand-gradient: linear-gradient(135deg, #818cf8 0%, #22d3ee 100%);
   --primary-gradient: linear-gradient(135deg, #818cf8 0%, #22d3ee 100%);
   --hover-gradient: linear-gradient(135deg, #4f46e5 0%, #0891b2 100%);
   --accent-color: #818cf8;
@@ -42,7 +43,8 @@
   --text-secondary: #574f46;
   --text-muted: #8c8275;
   
-  /* Custom vibrant gradients for light mode */
+  /* Brighten gradients for light background readability */
+  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #0891b2 100%);
   --primary-gradient: linear-gradient(135deg, #0097e6 0%, #686de0 100%);
   --hover-gradient: linear-gradient(135deg, #00a8ff 0%, #787df0 100%);
   --accent-color: #4f46e5;
@@ -127,7 +129,7 @@ body {
   place-content: center;
   inline-size: 40px;
   block-size: 40px;
-  background: var(--primary-gradient);
+  background: var(--brand-gradient);
   border-radius: var(--border-radius-md);
   box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
 }
@@ -159,7 +161,7 @@ body {
   font-weight: 700;
   font-size: 1.8rem;
   letter-spacing: -0.02em;
-  background: var(--primary-gradient);
+  background: var(--brand-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

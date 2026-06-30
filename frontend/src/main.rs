@@ -299,7 +299,7 @@ fn slug_to_category(slug: &str) -> String {
 fn Home() -> impl IntoView {
     // 1. Reactive Signals
     let (lang, set_lang) = create_signal(Language::En);
-    let (theme, set_theme) = create_signal(Theme::Dark);
+    let (theme, set_theme) = create_signal(Theme::Light);
     let (search_query, set_search_query) = create_signal(String::new());
     
     let params = use_params_map();

@@ -95,11 +95,11 @@ pub async fn get_news_items(
             category, published_at, created_at, is_favorite
          FROM news_items
          WHERE ($1::text IS NULL 
-                OR title_en LIKE $1 
-                OR title_bn LIKE $1 
-                OR summary_en LIKE $1 
-                OR summary_bn LIKE $1 
-                OR source LIKE $1)
+                OR title_en ILIKE $1 
+                OR title_bn ILIKE $1 
+                OR summary_en ILIKE $1 
+                OR summary_bn ILIKE $1 
+                OR source ILIKE $1)
            AND ($2::text IS NULL OR category = $2)
            AND ($3 = FALSE OR is_favorite = TRUE)
            AND ($3 = TRUE OR ($4 = FALSE AND published_at >= $5) OR ($4 = TRUE AND published_at < $5))

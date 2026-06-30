@@ -193,6 +193,7 @@ async fn get_news_stats_route(State(state): State<Arc<AppState>>) -> impl IntoRe
             Json(serde_json::json!({
                 "total_count": total,
                 "since_last_sync": since_last,
+                "last_sync": last,
             })).into_response()
         }
         Err(e) => {

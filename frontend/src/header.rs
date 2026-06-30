@@ -14,14 +14,19 @@ pub fn GlobalHeader() -> impl IntoView {
     let set_seconds_to_sync = expect_context::<WriteSignal<i64>>();
     let set_last_sync_timestamp = expect_context::<WriteSignal<Option<i64>>>();
     
-    // Initial hook to load synchronization status
+    let (total_curated, set_total_curated) = create_signal(0_i64);
+
+    // Initial hook to load synchronization status and stats
     create_effect(move |_| {
         spawn_local(async move {
-            let res = Request::get("/api/news/status").send().await;
+            let res = Request::get("/api/news/stats").send().await;
             if let Ok(r) = res {
-                if let Ok(text) = r.text().await {
-                    if let Ok(ts) = text.trim().parse::<i64>() {
+                if let Ok(data) = r.json::<serde_json::Value>().await {
+                    if let Some(ts) = data.get("last_sync").and_then(|v| v.as_i64()) {
                         set_last_sync_timestamp.set(Some(ts));
+                    }
+                    if let Some(total) = data.get("total_count").and_then(|v| v.as_i64()) {
+                        set_total_curated.set(total);
                     }
                 }
             }
@@ -195,6 +200,28 @@ pub fn GlobalHeader() -> impl IntoView {
                 <li><a href="/sources" on:click=move |_| is_menu_open.set(false)>"News Sources"</a></li>
                 <li><a href="/changelog" on:click=move |_| is_menu_open.set(false)>"Version & Changelog"</a></li>
             </ul>
+
+            <div style="margin-top: 20px; font-size: calc(1.1rem - 3pt); color: var(--text-muted); text-align: center; padding: 0 1rem; line-height: 1.5;">
+                {move || {
+                    let total = total_curated.get();
+                    let date_str = if let Some(ts) = last_sync_timestamp.get() {
+                        let date = js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(ts as f64 * 1000.0));
+                        let locale = if lang.get() == Language::Bn { "bn-BD" } else { "en-US" };
+                        let options = js_sys::Object::new();
+                        js_sys::Reflect::set(&options, &wasm_bindgen::JsValue::from_str("dateStyle"), &wasm_bindgen::JsValue::from_str("medium")).unwrap();
+                        js_sys::Reflect::set(&options, &wasm_bindgen::JsValue::from_str("timeStyle"), &wasm_bindgen::JsValue::from_str("short")).unwrap();
+                        date.to_locale_string(locale, &options).as_string().unwrap_or_default()
+                    } else {
+                        "".to_string()
+                    };
+                    
+                    if lang.get() == Language::Bn {
+                        format!("মোট {}টি এআই সংবাদ সংকলিত। শেষ সিঙ্ক: {}", crate::translate_digits(total), date_str)
+                    } else {
+                        format!("{} AI News articles curated. Last Synced {}", total, date_str)
+                    }
+                }}
+            </div>
         </div>
     }
 }

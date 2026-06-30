@@ -147,7 +147,7 @@ fn translate_source(lang: Language, src: &str) -> String {
 }
 
 // Bengali Digit Converter Helper
-fn translate_digits(num: i64) -> String {
+pub fn translate_digits(num: i64) -> String {
     let s = num.to_string();
     let mut bn = String::new();
     for c in s.chars() {
@@ -523,16 +523,7 @@ fn Home() -> impl IntoView {
         }
     );
 
-    // Resource to fetch news stats
-    let stats_resource = create_resource(
-        move || (
-            refresh_trigger.get(),
-            news_resource.get(),
-        ),
-        |(trigger, _)| async move {
-            fetch_stats(trigger).await
-        }
-    );
+
 
     // 6. Cycling mechanism: rotates card position every 60 seconds
     let (cycle_offset, set_cycle_offset) = create_signal(0usize);
@@ -612,31 +603,6 @@ fn Home() -> impl IntoView {
         <Title text=move || format!("{} News - AI PulseQ", active_category.get()) />
         <Meta name="description" content=move || format!("AI PulseQ: Latest curated news and insights about {} in the AI world.", active_category.get()) />
         <div class="container">
-            /* Statistics Banner */
-            {move || stats_resource.get().map(|res| {
-                match res {
-                    Ok(stats) => {
-                        let total = stats.total_count;
-                        let since_last = stats.since_last_sync;
-                        
-                        let text = if lang.get() == Language::En {
-                            format!("{} AI News articles curated, {} new since last sync. Next sync in ", total, since_last)
-                        } else {
-                            format!("মোট {}টি এআই সংবাদ সংকলিত, শেষ সিঙ্কের পর {}টি নতুন খবর। পরবর্তী সিঙ্ক হতে বাকি ", translate_digits(total as i64), translate_digits(since_last as i64))
-                        };
-
-                        view! {
-                            <div class="stats-banner">
-                                <span class="stats-text">
-                                    {text}
-                                    <span class="stats-countdown">{format_countdown}</span>
-                                </span>
-                            </div>
-                        }.into_view()
-                    }
-                    Err(_) => view! {}.into_view()
-                }
-            })}
 
             /* Dashboard Search & Categories Controls */
             <section class="dashboard-controls">

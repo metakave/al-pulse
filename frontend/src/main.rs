@@ -239,7 +239,7 @@ fn AboutPage() -> impl IntoView {
                 </p>
                 <p class="about-paragraph">
                     "The ideation, design, and technical execution of this curation project was done by "
-                    <strong>"Sadiq M Alam"</strong>
+                    <strong><a href="https://sadiqalam.com" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">"Sadiq M Alam"</a></strong>
                     ", Enterprise AI Consultant, with the goal of keeping people updated about AI News from all over the world."
                 </p>
                 <a href="/" class="about-back-btn">

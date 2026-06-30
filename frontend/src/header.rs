@@ -195,13 +195,16 @@ pub fn GlobalHeader() -> impl IntoView {
             </div>
             
             <ul class="sidebar-links">
+                <li><a href="/" on:click=move |_| is_menu_open.set(false)>"Latest News"</a></li>
+                <li><a href="/favorites" on:click=move |_| is_menu_open.set(false)>"My Favorites"</a></li>
+                <li><a href="/archive" on:click=move |_| is_menu_open.set(false)>"Archive"</a></li>
                 <li><a href="/weekly-roundup" on:click=move |_| is_menu_open.set(false)>"Weekly AI Roundup"</a></li>
                 <li><a href="/about" on:click=move |_| is_menu_open.set(false)>"About AI PulseQ"</a></li>
                 <li><a href="/sources" on:click=move |_| is_menu_open.set(false)>"News Sources"</a></li>
                 <li><a href="/changelog" on:click=move |_| is_menu_open.set(false)>"Version & Changelog"</a></li>
             </ul>
 
-            <div style="margin-top: 20px; font-size: calc(1.1rem - 3pt); color: var(--text-muted); text-align: left; padding: 0 1rem; line-height: 1.5;">
+            <div style="margin-top: 20px; font-size: calc(1.1rem - 3pt); color: var(--text-muted); text-align: left; padding: 0 1rem; margin-left: 0; line-height: 1.5;">
                 {move || {
                     let total = total_curated.get();
                     let date_str = if let Some(ts) = last_sync_timestamp.get() {

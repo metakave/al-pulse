@@ -541,7 +541,6 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  text-transform: uppercase;
   letter-spacing: 0.02em;
 }
 

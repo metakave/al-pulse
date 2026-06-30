@@ -608,7 +608,7 @@ fn Home() -> impl IntoView {
 
     view! {
         <Title text=move || format!("{} News - AI PulseQ", active_category.get()) />
-        <Meta name="description" content=move || format!("Latest curated news and insights about {} in the AI world.", active_category.get()) />
+        <Meta name="description" content=move || format!("AI PulseQ: Latest curated news and insights about {} in the AI world.", active_category.get()) />
         <div class="container">
             <header class="app-header">
                 <div class="brand-section">

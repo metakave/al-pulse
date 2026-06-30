@@ -1,8 +1,8 @@
 [
   {
     "id": "week3",
-    "title": "Week 3: July 8 - July 14, 2024",
-    "title_bn": "সপ্তাহ ৩: জুলাই ৮ - জুলাই ১৪, ২০২৪",
+    "title": "Week 3: July 8 - July 14, 2026",
+    "title_bn": "সপ্তাহ ৩: জুলাই ৮ - জুলাই ১৪, ২০২৬",
     "summary": "Mistral AI's new models, AI Safety Institute guidelines, Robotics integration, and Job impact reports.",
     "summary_bn": "Mistral AI-এর নতুন মডেল, AI Safety Institute নির্দেশিকা, রোবোটিক্স একীভূতকরণ, এবং কর্মসংস্থানে প্রভাব।",
     "content": "### Mistral AI's New Models\nThe European AI champion Mistral released Codestral Mamba, a new model specifically designed for code generation, along with Mathstral, a model optimized for mathematical reasoning. These releases continue to prove that smaller, highly specialized open-weights models can compete with massive closed models.\n\n### AI Safety Institute Progress\nThe US AI Safety Institute announced its first set of comprehensive guidelines for evaluating the potential risks of frontier models. This is seen as a crucial step towards standardizing AI safety evaluations across the industry.\n\n### Robotics Integration\nOpenAI quietly reinstated its robotics team, hinting at a renewed focus on embodied AI. Simultaneously, Boston Dynamics released a video showing their new electric Atlas robot performing complex sorting tasks autonomously using a new AI vision system.\n\n### Job Impact Reports\nA new report from the World Economic Forum suggested that while AI is displacing certain administrative roles at a faster rate than predicted, it is also creating a surge in demand for \"AI implementation specialists\" across non-tech industries.",
@@ -10,8 +10,8 @@
   },
   {
     "id": "week2",
-    "title": "Week 2: July 1 - July 7, 2024",
-    "title_bn": "সপ্তাহ ২: জুলাই ১ - জুলাই ৭, ২০২৪",
+    "title": "Week 2: July 1 - July 7, 2026",
+    "title_bn": "সপ্তাহ ২: জুলাই ১ - জুলাই ৭, ২০২৬",
     "summary": "Google's Gemini Upgrades, AI in Healthcare Milestones, The AI Chip Race, and Copyright Lawsuits Update.",
     "summary_bn": "Google-এর Gemini আপডেট, স্বাস্থ্যসেবায় AI-এর মাইলফলক, AI চিপ প্রতিযোগিতা, এবং কপিরাইট মামলা।",
     "content": "### Google's Gemini Upgrades\nGoogle announced several improvements to Gemini Advanced, including a larger context window and better integration with Google Workspace apps. The focus remains on making Gemini a more practical tool for everyday productivity tasks.\n\n### AI in Healthcare Milestones\nA new study published in Nature showcased an AI model capable of predicting the onset of certain neurodegenerative diseases up to five years earlier than current clinical methods, highlighting the growing impact of AI in predictive medicine.\n\n### The AI Chip Race\nNvidia's stock continued its meteoric rise as demand for their H100 chips remains unquenchable. Meanwhile, competitors like AMD and Intel announced accelerated timelines for their next-generation AI accelerators in an attempt to capture market share.\n\n### Copyright Lawsuits Update\nThe music industry launched a massive coordinated lawsuit against AI music generators Suno and Udio, claiming they trained their models on copyrighted music without permission or compensation. This case is expected to set significant precedents for AI training data.",
@@ -19,8 +19,8 @@
   },
   {
     "id": "week1",
-    "title": "Week 1: June 24 - June 30, 2024",
-    "title_bn": "সপ্তাহ ১: জুন ২৪ - জুন ৩০, ২০২৪",
+    "title": "Week 1: June 24 - June 30, 2026",
+    "title_bn": "সপ্তাহ ১: জুন ২৪ - জুন ৩০, ২০২৬",
     "summary": "OpenAI's Strategy Shift, Anthropic's Claude 3.5 Sonnet, Meta's Open-Source Push Continues, and Regulatory Scrutiny in the EU.",
     "summary_bn": "OpenAI-এর কৌশলগত পরিবর্তন, Anthropic-এর Claude 3.5 Sonnet, Meta-এর ওপেন-সোর্স পুশ, এবং EU-তে নিয়ন্ত্রক যাচাইকরণ।",
     "content": "### OpenAI's Strategy Shift\nOpenAI made headlines by officially acquiring Rockset, a real-time analytics database company. This signals OpenAI's intent to offer enterprise customers better tools for integrating their own data with AI models. Furthermore, OpenAI began rolling out a new Mac app for ChatGPT, increasing accessibility for Apple users.\n\n### Anthropic's Claude 3.5 Sonnet\nAnthropic released Claude 3.5 Sonnet, its mid-tier model. Early benchmarks and user reports suggest it often outperforms competitors, including GPT-4o, in coding and nuanced writing tasks, while being significantly faster and cheaper than Anthropic’s previous top-tier model.\n\n### Meta's Open-Source Push Continues\nMeta released new research and weights for their multi-modal models, reinforcing their commitment to the open-source AI ecosystem. Their approach continues to contrast with the closed ecosystems of OpenAI and Google.\n\n### Regulatory Scrutiny in the EU\nThe European Union formally charged Apple with violating the Digital Markets Act, but AI companies are watching closely as the EU continues to draft specific guidelines for how the AI Act will be implemented, specifically regarding general-purpose AI models.",

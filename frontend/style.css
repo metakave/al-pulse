@@ -612,7 +612,7 @@ body {
   font-size: 0.875rem;
   color: var(--text-secondary);
   line-height: 1.5;
-  margin-block-end: 0.6rem;
+  margin-block-end: 0.25rem;
   
   /* Line clamp to 3 lines */
   display: -webkit-box;
@@ -627,7 +627,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-block-start: 1rem;
+  padding-block-start: 0.5rem;
   border-block-start: 1px solid rgba(255, 255, 255, 0.05);
   font-size: 0.8rem;
   color: var(--text-muted);

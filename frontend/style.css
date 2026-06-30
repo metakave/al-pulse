@@ -769,6 +769,10 @@ body {
     align-items: center;
     justify-content: space-between;
     margin-top: 5px;
+    margin-block-end: 0.5rem;
+  }
+  .container {
+    padding-block-start: 0.5rem;
   }
   .brand-text h1 {
     font-size: 1.15rem;

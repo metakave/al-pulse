@@ -1221,3 +1221,9 @@ body {
 .sidebar-links a:hover {
   color: var(--accent-color);
 }
+
+@media (max-width: 768px) {
+  .about-container {
+    padding-block-start: 0;
+  }
+}

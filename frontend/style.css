@@ -768,6 +768,7 @@ body {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    margin-top: 5px;
   }
   .brand-text h1 {
     font-size: 1.15rem;

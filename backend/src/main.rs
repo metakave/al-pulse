@@ -476,6 +476,9 @@ fn categorize_article(title: &str, summary: &str) -> Option<&'static str> {
         || text.contains("humanoid")
         || text.contains("tesla bot")
         || text.contains("figure ai")
+        || text.contains("robo taxi")
+        || text.contains("robotaxi")
+        || text.contains("waymo")
     {
         return Some("Robotics & Autonomous");
     }

@@ -76,7 +76,7 @@ fn localize(lang: Language, key: &str) -> &'static str {
         },
         Language::Bn => match key {
             "title" => "এআই পালসকিউ",
-            "tagline" => "নির্বাচিত সংবাদ সংকলন",
+            "tagline" => "বুদ্ধিমত্তার সংকলন",
             "latest_news" => "সর্বশেষ সংবাদ",
             "archive" => "আর্কাইভ",
             "my_favorites" => "আমার প্রিয়",

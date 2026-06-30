@@ -42,9 +42,9 @@
   --text-secondary: #574f46;
   --text-muted: #8c8275;
   
-  /* Brighten gradients for light background readability */
-  --primary-gradient: linear-gradient(135deg, #c7d2fe 0%, #a5f3fc 100%);
-  --hover-gradient: linear-gradient(135deg, #a5b4fc 0%, #67e8f9 100%);
+  /* Custom vibrant gradients for light mode */
+  --primary-gradient: linear-gradient(135deg, #0097e6 0%, #686de0 100%);
+  --hover-gradient: linear-gradient(135deg, #00a8ff 0%, #787df0 100%);
   --accent-color: #4f46e5;
   --accent-cyan: #0891b2;
   

@@ -71,7 +71,7 @@ fn localize(lang: Language, key: &str) -> &'static str {
             "sync_failed" => "Sync Connection Failed",
             "loading" => "Connecting to AI Pulse database...",
             "read" => "Read",
-            "job_impact_badge" => "⚠️ Job",
+            "job_impact_badge" => "Job",
             _ => "",
         },
         Language::Bn => match key {
@@ -90,7 +90,7 @@ fn localize(lang: Language, key: &str) -> &'static str {
             "sync_failed" => "সিঙ্ক সংযোগ ব্যর্থ হয়েছে",
             "loading" => "এআই পালস ডাটাবেসের সাথে সংযুক্ত হচ্ছে...",
             "read" => "পড়ুন",
-            "job_impact_badge" => "⚠️ কর্মসংস্থান প্রভাব",
+            "job_impact_badge" => "কর্মসংস্থান প্রভাব",
             _ => "",
         }
     }

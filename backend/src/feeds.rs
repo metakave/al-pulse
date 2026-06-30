@@ -142,7 +142,7 @@ pub const FEEDS: &[NewsFeedSource] = &[
     },
     NewsFeedSource {
         name: "ZDNet",
-        url: "https://www.zdnet.com/news/rss.xml",
+        url: "https://www.zdnet.com/topic/artificial-intelligence/rss.xml",
     },
     NewsFeedSource {
         name: "CNET",

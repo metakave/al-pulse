@@ -768,6 +768,9 @@ body {
   .brand-text h1 {
     font-size: 1.15rem;
   }
+  .status-indicator {
+    display: none;
+  }
   .nav-and-status {
     flex-direction: row;
     align-items: center;

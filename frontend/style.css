@@ -348,7 +348,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  margin-block-end: 1.25rem;
+  margin-block-end: 0.6rem;
 }
 
 /* Search bar design */

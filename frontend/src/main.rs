@@ -358,7 +358,10 @@ fn main() {
 }
 
 mod header;
+mod weekly;
+
 use crate::header::GlobalHeader;
+use crate::weekly::{WeeklyRoundupListPage, WeeklyRoundupDetailPage};
 
 #[component]
 fn App() -> impl IntoView {
@@ -407,6 +410,8 @@ fn App() -> impl IntoView {
                 <GlobalHeader />
                 <Routes>
                     <Route path="" view=|| view! { <Home /> } />
+                    <Route path="/weekly-roundup" view=|| view! { <WeeklyRoundupListPage /> } />
+                    <Route path="/weekly-roundup/:id" view=|| view! { <WeeklyRoundupDetailPage /> } />
                     <Route path="/about" view=|| view! { <AboutPage /> } />
                     <Route path="/changelog" view=|| view! { <ChangelogPage /> } />
                     <Route path="/sources" view=|| view! { <NewsSourcesPage /> } />

@@ -190,6 +190,7 @@ pub fn GlobalHeader() -> impl IntoView {
             </div>
             
             <ul class="sidebar-links">
+                <li><a href="/weekly-roundup" on:click=move |_| is_menu_open.set(false)>"Weekly AI Roundup"</a></li>
                 <li><a href="/about" on:click=move |_| is_menu_open.set(false)>"About AI PulseQ"</a></li>
                 <li><a href="/changelog" on:click=move |_| is_menu_open.set(false)>"Version & Changelog"</a></li>
                 <li><a href="/sources" on:click=move |_| is_menu_open.set(false)>"News Sources"</a></li>

@@ -2,6 +2,7 @@ use leptos::*;
 mod footer;
 use crate::footer::Footer;
 use leptos_router::*;
+use leptos_meta::*;
 use gloo_net::http::Request;
 use serde::{Deserialize, Serialize};
 
@@ -70,7 +71,7 @@ fn localize(lang: Language, key: &str) -> &'static str {
             "sync_failed" => "Sync Connection Failed",
             "loading" => "Connecting to AI Pulse database...",
             "read" => "Read",
-            "job_impact_badge" => "⚠️ Job Impact",
+            "job_impact_badge" => "⚠️ Job",
             _ => "",
         },
         Language::Bn => match key {
@@ -98,6 +99,9 @@ fn localize(lang: Language, key: &str) -> &'static str {
 // Category Localization
 fn translate_category(lang: Language, cat: &str) -> String {
     if lang == Language::En {
+        if cat == "Job Impact" {
+            return "AI Job Impact".to_string();
+        }
         return cat.to_string();
     }
     match cat {
@@ -248,24 +252,63 @@ fn AboutPage() -> impl IntoView {
 
 fn main() {
     console_error_panic_hook::set_once();
-    mount_to_body(|| view! {
-        <Router>
-            <Routes>
-                <Route path="" view=|| view! { <App /> } />
-                <Route path="/about" view=|| view! { <AboutPage /> } />
-                <Route path="*any" view=|| view! { "Page not found." } />
-            </Routes>
-        </Router>
-    });
+    mount_to_body(|| view! { <App /> });
 }
 
 #[component]
 fn App() -> impl IntoView {
+    provide_meta_context();
+    view! {
+        <Router>
+            <Routes>
+                <Route path="" view=|| view! { <Home /> } />
+                <Route path="/about" view=|| view! { <AboutPage /> } />
+                <Route path="/:category" view=|| view! { <Home /> } />
+                <Route path="*any" view=|| view! { "Page not found." } />
+            </Routes>
+        </Router>
+    }
+}
+
+fn category_to_slug(cat: &str) -> String {
+    match cat {
+        "LLMs & Generative AI" => "llms-generative-ai".to_string(),
+        "Robotics & Autonomous" => "robotics-autonomous".to_string(),
+        "Industry & Tech Giants" => "industry-tech-giants".to_string(),
+        "Research & Science" => "research-science".to_string(),
+        "AI Ethics & Policy" => "ai-ethics-policy".to_string(),
+        "Job Impact" => "ai-job-impact".to_string(),
+        _ => "".to_string(),
+    }
+}
+
+fn slug_to_category(slug: &str) -> String {
+    match slug {
+        "llms-generative-ai" => "LLMs & Generative AI".to_string(),
+        "robotics-autonomous" => "Robotics & Autonomous".to_string(),
+        "industry-tech-giants" => "Industry & Tech Giants".to_string(),
+        "research-science" => "Research & Science".to_string(),
+        "ai-ethics-policy" => "AI Ethics & Policy".to_string(),
+        "ai-job-impact" => "Job Impact".to_string(),
+        _ => "All".to_string(),
+    }
+}
+
+#[component]
+fn Home() -> impl IntoView {
     // 1. Reactive Signals
     let (lang, set_lang) = create_signal(Language::En);
     let (theme, set_theme) = create_signal(Theme::Dark);
     let (search_query, set_search_query) = create_signal(String::new());
-    let (active_category, set_active_category) = create_signal("All".to_string());
+    
+    let params = use_params_map();
+    let active_category = create_memo(move |_| {
+        if let Some(slug) = params.get().get("category") {
+            slug_to_category(slug)
+        } else {
+            "All".to_string()
+        }
+    });
     let (active_tab, set_active_tab) = create_signal(Tab::Latest);
     let (current_page, set_current_page) = create_signal(1usize);
 
@@ -461,6 +504,8 @@ fn App() -> impl IntoView {
     };
 
     view! {
+        <Title text=move || format!("{} News - AI Pulse", active_category.get()) />
+        <Meta name="description" content=move || format!("Latest curated news and insights about {} in the AI world.", active_category.get()) />
         <div class="container">
             <header class="app-header">
                 <div class="brand-section">
@@ -601,17 +646,17 @@ fn App() -> impl IntoView {
                 <div class="categories-wrapper">
                     <div class="categories-list">
                         {move || categories().into_iter().map(|(id, display_name)| {
-                            let current_id = id;
-                            let id_for_active = current_id.clone();
-                            let id_for_click = current_id.clone();
-                            let is_active = move || active_category.get() == id_for_active;
+                            let current_id = id.clone();
+                            let slug = category_to_slug(&current_id);
+                            let href = if slug.is_empty() { "/".to_string() } else { format!("/{}", slug) };
+                            let is_active = move || active_category.get() == current_id;
                             view! {
-                                <button 
+                                <a 
+                                    href=href
                                     class=move || if is_active() { "category-pill active" } else { "category-pill" }
-                                    on:click=move |_| set_active_category.set(id_for_click.clone())
                                 >
                                     {display_name}
-                                </button>
+                                </a>
                             }
                         }).collect::<Vec<_>>()}
                     </div>
@@ -676,7 +721,19 @@ fn App() -> impl IntoView {
                                                          item.summary_en.clone().unwrap_or_default() 
                                                      };
                                                      
-                                                     let category_display = translate_category(current_lang, &item.category);
+                                                     let category_display = if current_lang == Language::En {
+                                                         match item.category.as_str() {
+                                                             "LLMs & Generative AI" => "Gen AI",
+                                                             "Robotics & Autonomous" => "Robotics",
+                                                             "Industry & Tech Giants" => "Tech Giants",
+                                                             "Research & Science" => "Research",
+                                                             "AI Ethics & Policy" => "Ethics",
+                                                             "Job Impact" => "Job",
+                                                             _ => item.category.as_str(),
+                                                         }.to_string()
+                                                     } else {
+                                                         translate_category(current_lang, &item.category)
+                                                     };
                                                      let source_display = translate_source(current_lang, &item.source);
                                                      let date_display = format_relative_time(current_lang, item.published_at);
                                                      

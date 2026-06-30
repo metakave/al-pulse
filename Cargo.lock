@@ -659,6 +659,7 @@ dependencies = [
  "gloo-net 0.5.0",
  "js-sys",
  "leptos",
+ "leptos_meta",
  "leptos_router",
  "serde",
  "serde_json",
@@ -1425,6 +1426,20 @@ dependencies = [
  "syn 2.0.118",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "leptos_meta"
+version = "0.6.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25acc2f63cf91932013e400a95bf6e35e5d3dbb44a7b7e25a8e3057d12005b3b"
+dependencies = [
+ "cfg-if",
+ "indexmap",
+ "leptos",
+ "tracing",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

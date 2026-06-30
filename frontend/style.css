@@ -1164,3 +1164,23 @@ body {
   color: var(--accent-color);
   font-weight: bold;
 }
+
+/* Global Header Mobile Tweaks */
+@media (max-width: 768px) {
+    /* Make English title 2pt (~0.15rem) larger than Bangla on mobile */
+    .brand-text.lang-En h1 {
+        font-size: 1.3rem;
+    }
+    
+    /* Clean up Sync button on mobile: remove bg, make icon blue */
+    .nav-and-status .sync-btn, .refresh-btn {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+    
+    .nav-and-status .sync-btn .sync-icon-svg, .refresh-btn .sync-icon-svg {
+        color: #6366f1 !important;
+    }
+}

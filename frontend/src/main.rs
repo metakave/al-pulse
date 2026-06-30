@@ -357,20 +357,64 @@ fn main() {
     mount_to_body(|| view! { <App /> });
 }
 
+mod header;
+use crate::header::GlobalHeader;
+
 #[component]
 fn App() -> impl IntoView {
     provide_meta_context();
+    
+    // Lift state globally
+    let (lang, set_lang) = create_signal(Language::En);
+    let (theme, set_theme) = create_signal(Theme::Light);
+    let (last_sync_timestamp, set_last_sync_timestamp) = create_signal(None::<i64>);
+    let (seconds_to_sync, set_seconds_to_sync) = create_signal(2700); 
+    let (active_tab, set_active_tab) = create_signal(Tab::Latest);
+    let (refresh_trigger, set_refresh_trigger) = create_signal(0);
+    
+    let trigger_sync_action = create_action(move |_: &()| {
+        async move {
+            let res = Request::post("/api/news/refresh")
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            if res.ok() {
+                let ts = fetch_api_status().await.unwrap_or_else(|_| (js_sys::Date::now() / 1000.0) as i64);
+                Ok(ts)
+            } else {
+                Err(format!("Server error: {}", res.status()))
+            }
+        }
+    });
+
+    provide_context(lang);
+    provide_context(set_lang);
+    provide_context(theme);
+    provide_context(set_theme);
+    provide_context(last_sync_timestamp);
+    provide_context(set_last_sync_timestamp);
+    provide_context(seconds_to_sync);
+    provide_context(set_seconds_to_sync);
+    provide_context(active_tab);
+    provide_context(set_active_tab);
+    provide_context(refresh_trigger);
+    provide_context(set_refresh_trigger);
+    provide_context(trigger_sync_action);
+
     view! {
         <Router>
-            <Routes>
-                <Route path="" view=|| view! { <Home /> } />
-                <Route path="/about" view=|| view! { <AboutPage /> } />
-                <Route path="/changelog" view=|| view! { <ChangelogPage /> } />
-                <Route path="/sources" view=|| view! { <NewsSourcesPage /> } />
-                <Route path="/:category" view=|| view! { <Home /> } />
-                <Route path="*any" view=|| view! { "Page not found." } />
-            </Routes>
-            <Footer />
+            <div class=move || format!("app-container theme-{:?}", theme.get())>
+                <GlobalHeader />
+                <Routes>
+                    <Route path="" view=|| view! { <Home /> } />
+                    <Route path="/about" view=|| view! { <AboutPage /> } />
+                    <Route path="/changelog" view=|| view! { <ChangelogPage /> } />
+                    <Route path="/sources" view=|| view! { <NewsSourcesPage /> } />
+                    <Route path="/:category" view=|| view! { <Home /> } />
+                    <Route path="*any" view=|| view! { "Page not found." } />
+                </Routes>
+                <Footer />
+            </div>
         </Router>
     }
 }
@@ -401,9 +445,15 @@ fn slug_to_category(slug: &str) -> String {
 
 #[component]
 fn Home() -> impl IntoView {
-    // 1. Reactive Signals
-    let (lang, set_lang) = create_signal(Language::En);
-    let (theme, set_theme) = create_signal(Theme::Light);
+    let lang = expect_context::<ReadSignal<Language>>();
+    let theme = expect_context::<ReadSignal<Theme>>();
+    let refresh_trigger = expect_context::<ReadSignal<i32>>();
+    let set_refresh_trigger = expect_context::<WriteSignal<i32>>();
+    let last_sync_timestamp = expect_context::<ReadSignal<Option<i64>>>();
+    let set_last_sync_timestamp = expect_context::<WriteSignal<Option<i64>>>();
+    let seconds_to_sync = expect_context::<ReadSignal<i64>>();
+    let trigger_sync_action = expect_context::<Action<(), Result<i64, String>>>();
+    
     let (search_query, set_search_query) = create_signal(String::new());
     
     let params = use_params_map();
@@ -414,7 +464,8 @@ fn Home() -> impl IntoView {
             "All".to_string()
         }
     });
-    let (active_tab, set_active_tab) = create_signal(Tab::Latest);
+    let active_tab = expect_context::<ReadSignal<Tab>>();
+    let set_active_tab = expect_context::<WriteSignal<Tab>>();
     let (current_page, set_current_page) = create_signal(1usize);
     let (is_menu_open, set_is_menu_open) = create_signal(false);
 
@@ -428,24 +479,6 @@ fn Home() -> impl IntoView {
         set_current_page.set(1);
     });
 
-    let on_theme_toggle = move |_| {
-        let next_theme = if theme.get() == Theme::Dark { Theme::Light } else { Theme::Dark };
-        set_theme.set(next_theme);
-        
-        if let Some(window) = web_sys::window() {
-            if let Some(document) = window.document() {
-                if let Some(html) = document.document_element() {
-                    let theme_str = if next_theme == Theme::Light { "light" } else { "dark" };
-                    let _ = html.set_attribute("data-theme", theme_str);
-                }
-            }
-        }
-    };
-    let (refresh_trigger, set_refresh_trigger) = create_signal(0);
-    
-    // 2. Status Signals
-    let (last_sync_timestamp, set_last_sync_timestamp) = create_signal(None::<i64>);
-    let (seconds_to_sync, set_seconds_to_sync) = create_signal(2700); 
     let (toasts, set_toasts) = create_signal(Vec::<Toast>::new());
 
     // Helper: Toast Manager
@@ -495,23 +528,6 @@ fn Home() -> impl IntoView {
         }
     );
 
-    // 4. Action for manual synchronizing
-    let trigger_sync_action = create_action(move |_: &()| {
-        async move {
-            let res = Request::post("/api/news/refresh")
-                .send()
-                .await
-                .map_err(|e| e.to_string())?;
-            
-            if res.ok() {
-                let ts = fetch_api_status().await.unwrap_or_else(|_| (js_sys::Date::now() / 1000.0) as i64);
-                Ok(ts)
-            } else {
-                Err(format!("Server error: {}", res.status()))
-            }
-        }
-    });
-
     // 6. Cycling mechanism: rotates card position every 60 seconds
     let (cycle_offset, set_cycle_offset) = create_signal(0usize);
     let (is_fading, set_is_fading) = create_signal(false);
@@ -529,16 +545,7 @@ fn Home() -> impl IntoView {
         }, std::time::Duration::from_secs(60));
     });
 
-    // 7. Initial hook to load synchronization status
-    create_effect(move |_| {
-        spawn_local(async move {
-            if let Ok(ts) = fetch_api_status().await {
-                set_last_sync_timestamp.set(Some(ts));
-            }
-        });
-    });
-
-    // 6. Hook to reload feed and display toast when sync finishes
+    // Hook to reload feed and display toast when sync finishes
     create_effect(move |_| {
         if let Some(result) = trigger_sync_action.value().get() {
             match result {
@@ -553,26 +560,8 @@ fn Home() -> impl IntoView {
                     show_toast(&format!("Sync failed: {}", e));
                 }
             }
-            trigger_sync_action.value().set(None);
+            // Do NOT clear action value here, otherwise other effects might miss it.
         }
-    });
-
-    // 7. Auto countdown timer (every 1 second)
-    create_effect(move |_| {
-        let _ = set_interval_with_handle(move || {
-            if let Some(last) = last_sync_timestamp.get() {
-                let now = (js_sys::Date::now() / 1000.0) as i64;
-                let diff = (last + 45 * 60) - now;
-                
-                if diff <= 0 {
-                    if !trigger_sync_action.pending().get() {
-                        trigger_sync_action.dispatch(());
-                    }
-                } else {
-                    set_seconds_to_sync.set(diff);
-                }
-            }
-        }, std::time::Duration::from_secs(1));
     });
 
     // Formatter: Sync Countdown
@@ -613,176 +602,6 @@ fn Home() -> impl IntoView {
         <Title text=move || format!("{} News - AI PulseQ", active_category.get()) />
         <Meta name="description" content=move || format!("AI PulseQ: Latest curated news and insights about {} in the AI world.", active_category.get()) />
         <div class="container">
-            <header class="app-header">
-                <div class="brand-section">
-                    <div class="brand-logo-container">
-                        <svg class="brand-logo-svg" viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; color: #6366f1;">
-                            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-                            <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5 5 3Z"/>
-                            <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5Z"/>
-                        </svg>
-                        <div class="pulse-dot"></div>
-                    </div>
-                    <div class="brand-text">
-                        <h1>{move || localize(lang.get(), "title")}</h1>
-                        <p>{move || localize(lang.get(), "tagline")}</p>
-                    </div>
-                </div>
-
-                <div class="nav-and-status">
-                    /* Desktop controls: Theme + Lang stay OUTSIDE on desktop, hidden on mobile */
-                    <div class="desktop-controls">
-                        <div class="lang-switcher">
-                            <button 
-                                class=move || if lang.get() == Language::En { "lang-btn active" } else { "lang-btn" }
-                                on:click=move |_| set_lang.set(Language::En)
-                            >
-                                "EN"
-                            </button>
-                            <button 
-                                class=move || if lang.get() == Language::Bn { "lang-btn active" } else { "lang-btn" }
-                                on:click=move |_| set_lang.set(Language::Bn)
-                            >
-                                "বাংলা"
-                            </button>
-                        </div>
-
-                        <button 
-                            class="theme-toggle-btn"
-                            on:click=on_theme_toggle.clone()
-                            title=move || if lang.get() == Language::En { "Toggle theme" } else { "থিম পরিবর্তন করুন" }
-                        >
-                            {move || if theme.get() == Theme::Light {
-                                view! {
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
-                                    </svg>
-                                }.into_view()
-                            } else {
-                                view! {
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L7.4 4.58a.996.996 0 00-1.41 0zM15.54 18.01a.996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06a.996.996 0 00-1.41 0zM7.05 18.01l-1.06 1.06a.996.996 0 101.41 1.41l1.06-1.06a.996.996 0 10-1.41-1.41zm11.35-13.43a.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.38-.38.38-1.02 0-1.41z"/>
-                                    </svg>
-                                }.into_view()
-                            }}
-                        </button>
-                    </div>
-
-                    /* Sync Status Panel */
-                    <div class="status-widget">
-                        <div class=move || if trigger_sync_action.pending().get() { "status-indicator syncing" } else { "status-indicator" }></div>
-                        <button 
-                            class="refresh-btn" 
-                            disabled=move || trigger_sync_action.pending().get()
-                            on:click=move |_| trigger_sync_action.dispatch(())
-                        >
-                            {move || if trigger_sync_action.pending().get() {
-                                view! { <span class="spin-icon">"⟳"</span> }.into_view()
-                            } else {
-                                view! { 
-                                    <>
-                                        <svg class="sync-icon-svg" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                            <polyline points="23 4 23 10 17 10"></polyline>
-                                            <polyline points="1 20 1 14 7 14"></polyline>
-                                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                                        </svg>
-                                        <span class="sync-text">{move || localize(lang.get(), "sync_now")}</span>
-                                    </>
-                                }.into_view()
-                            }}
-                        </button>
-                    </div>
-
-                    /* Hamburger Button */
-                    <button class="hamburger-btn" on:click=move |_| set_is_menu_open.update(|b| *b = !*b)>
-                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                        </svg>
-                    </button>
-                </div>
-            </header>
-
-            /* Sidebar Menu */
-            <div class=move || if is_menu_open.get() { "sidebar-overlay open" } else { "sidebar-overlay" } on:click=move |_| set_is_menu_open.set(false)></div>
-            <div class=move || if is_menu_open.get() { "sidebar-menu open" } else { "sidebar-menu" }>
-                <div class="sidebar-header">
-                    <button class="close-menu-btn" on:click=move |_| set_is_menu_open.set(false)>
-                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                    </button>
-                </div>
-                
-                <div class="sidebar-mobile-controls">
-                    <div class="lang-switcher">
-                        <button 
-                            class=move || if lang.get() == Language::En { "lang-btn active" } else { "lang-btn" }
-                            on:click=move |_| set_lang.set(Language::En)
-                        >
-                            "EN"
-                        </button>
-                        <button 
-                            class=move || if lang.get() == Language::Bn { "lang-btn active" } else { "lang-btn" }
-                            on:click=move |_| set_lang.set(Language::Bn)
-                        >
-                            "বাংলা"
-                        </button>
-                    </div>
-                    <button 
-                        class="theme-toggle-btn"
-                        on:click=on_theme_toggle.clone()
-                        title=move || if lang.get() == Language::En { "Toggle theme" } else { "থিম পরিবর্তন করুন" }
-                    >
-                        {move || if theme.get() == Theme::Light {
-                            view! {
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
-                                </svg>
-                            }.into_view()
-                        } else {
-                            view! {
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L7.4 4.58a.996.996 0 00-1.41 0zM15.54 18.01a.996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41l-1.06-1.06a.996.996 0 00-1.41 0zM7.05 18.01l-1.06 1.06a.996.996 0 101.41 1.41l1.06-1.06a.996.996 0 10-1.41-1.41zm11.35-13.43a.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06c.38-.38.38-1.02 0-1.41z"/>
-                                </svg>
-                            }.into_view()
-                        }}
-                    </button>
-                </div>
-
-                <nav class="sidebar-nav">
-                    <button 
-                        class=move || if active_tab.get() == Tab::Latest { "sidebar-tab-btn active" } else { "sidebar-tab-btn" }
-                        on:click=move |_| { set_active_tab.set(Tab::Latest); set_is_menu_open.set(false); }
-                    >
-                        {move || localize(lang.get(), "latest_news")}
-                    </button>
-                    <button 
-                        class=move || if active_tab.get() == Tab::Archive { "sidebar-tab-btn active" } else { "sidebar-tab-btn" }
-                        on:click=move |_| { set_active_tab.set(Tab::Archive); set_is_menu_open.set(false); }
-                    >
-                        {move || localize(lang.get(), "archive")}
-                    </button>
-                    <button 
-                        class=move || if active_tab.get() == Tab::Favorites { "sidebar-tab-btn active" } else { "sidebar-tab-btn" }
-                        on:click=move |_| { set_active_tab.set(Tab::Favorites); set_is_menu_open.set(false); }
-                    >
-                        {move || localize(lang.get(), "my_favorites")}
-                    </button>
-                    <a href="/about" class="sidebar-tab-btn" on:click=move |_| set_is_menu_open.set(false)>
-                        "About"
-                    </a>
-                    <a href="/changelog" class="sidebar-tab-btn" on:click=move |_| set_is_menu_open.set(false)>
-                        "Change Log"
-                    </a>
-                    <a href="/sources" class="sidebar-tab-btn" on:click=move |_| set_is_menu_open.set(false)>
-                        "News Sources"
-                    </a>
-                </nav>
-            </div>
-
             /* Statistics Banner */
             {move || stats_resource.get().map(|res| {
                 match res {

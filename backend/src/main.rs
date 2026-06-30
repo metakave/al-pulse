@@ -302,16 +302,23 @@ async fn fetch_and_save_feeds(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::er
 
                                     // Clean title and source
                                     let raw_title = entry.title.map(|t| t.content).unwrap_or_else(|| "Untitled Headline".to_string());
-                                    let (title_en, actual_source) = if feed.name == "Google News" {
-                                        let parts: Vec<&str> = raw_title.rsplitn(2, " - ").collect();
-                                        if parts.len() == 2 {
-                                            (parts[1].trim().to_string(), parts[0].trim().to_string())
-                                        } else {
-                                            (raw_title, feed.name.to_string())
-                                        }
-                                    } else {
-                                        (raw_title, feed.name.to_string())
-                                    };
+                                     let (title_en, actual_source) = if feed.name.starts_with("Google News") {
+                                         let parts: Vec<&str> = raw_title.rsplitn(2, " - ").collect();
+                                         if parts.len() == 2 {
+                                             (parts[1].trim().to_string(), parts[0].trim().to_string())
+                                         } else {
+                                             let clean_name = feed.name
+                                                 .replace("Google News", "")
+                                                 .replace("(", "")
+                                                 .replace(")", "")
+                                                 .trim()
+                                                 .to_string();
+                                             let clean_name = if clean_name.is_empty() { "News Search".to_string() } else { clean_name };
+                                             (raw_title, clean_name)
+                                         }
+                                     } else {
+                                         (raw_title, feed.name.to_string())
+                                     };
                                     
                                     // Combine summary and content
                                     let raw_summary = entry.summary.map(|s| s.content)

@@ -30,7 +30,7 @@ pub fn GlobalHeader() -> impl IntoView {
 
     // Update countdown timer every second
     create_effect(move |_| {
-        let _ = set_interval_with_handle(move || {
+        if let Ok(handle) = set_interval_with_handle(move || {
             if let Some(last) = last_sync_timestamp.get() {
                 let now = (js_sys::Date::now() / 1000.0) as i64;
                 let elapsed = now - last;
@@ -45,7 +45,11 @@ pub fn GlobalHeader() -> impl IntoView {
                     set_seconds_to_sync.set(diff);
                 }
             }
-        }, std::time::Duration::from_secs(1));
+        }, std::time::Duration::from_secs(1)) {
+            on_cleanup(move || {
+                handle.clear();
+            });
+        }
     });
 
     let is_menu_open = create_rw_signal(false);
@@ -87,12 +91,6 @@ pub fn GlobalHeader() -> impl IntoView {
             /* Nav and Status */
             <div class="nav-and-status">
                 <div class="desktop-controls">
-                    <ul class="desktop-nav-links" style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; margin-right: 1.5rem;">
-                        <li><a href="/weekly-roundup" style="text-decoration: none; color: var(--text-secondary); font-weight: 500;">"Weekly AI Roundup"</a></li>
-                        <li><a href="/about" style="text-decoration: none; color: var(--text-secondary); font-weight: 500;">"About AI PulseQ"</a></li>
-                        <li><a href="/changelog" style="text-decoration: none; color: var(--text-secondary); font-weight: 500;">"Version"</a></li>
-                        <li><a href="/sources" style="text-decoration: none; color: var(--text-secondary); font-weight: 500;">"Sources"</a></li>
-                    </ul>
                     <div class="lang-switcher">
                         <button 
                             class=move || if lang.get() == Language::En { "lang-btn active" } else { "lang-btn" }

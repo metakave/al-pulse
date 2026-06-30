@@ -112,9 +112,12 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
+  margin-inline: auto;
   margin-block-end: 2.5rem;
+  padding-inline: 1.5rem;
   padding-block-end: 1.5rem;
   border-block-end: 1px solid var(--panel-border);
+  max-inline-size: var(--max-width);
 }
 
 .brand-section {
@@ -932,7 +935,7 @@ body {
   border: none;
   color: var(--text-primary);
   cursor: pointer;
-  display: none; /* hidden on desktop */
+  display: flex;
   align-items: center;
   justify-content: center;
   padding: 8px;

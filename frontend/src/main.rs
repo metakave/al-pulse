@@ -538,7 +538,7 @@ fn Home() -> impl IntoView {
     let (is_fading, set_is_fading) = create_signal(false);
     
     create_effect(move |_| {
-        let _ = set_interval_with_handle(move || {
+        if let Ok(handle) = set_interval_with_handle(move || {
             // Step 1: Start fade out
             set_is_fading.set(true);
             
@@ -547,7 +547,11 @@ fn Home() -> impl IntoView {
                 set_cycle_offset.update(|offset| *offset += 1);
                 set_is_fading.set(false);
             }, std::time::Duration::from_millis(350));
-        }, std::time::Duration::from_secs(60));
+        }, std::time::Duration::from_secs(60)) {
+            on_cleanup(move || {
+                handle.clear();
+            });
+        }
     });
 
     // Hook to reload feed and display toast when sync finishes

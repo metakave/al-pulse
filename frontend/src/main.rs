@@ -465,7 +465,11 @@ fn App() -> impl IntoView {
             <header class="app-header">
                 <div class="brand-section">
                     <div class="brand-logo-container">
-                        <span class="brand-logo-icon">"⚡"</span>
+                        <svg class="brand-logo-svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px; color: #fff;">
+                            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                            <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5 5 3Z"/>
+                            <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5Z"/>
+                        </svg>
                         <div class="pulse-dot"></div>
                     </div>
                     <div class="brand-text">

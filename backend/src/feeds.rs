@@ -131,4 +131,41 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "Google News (AI Layoffs & Job Cuts)",
         url: "https://news.google.com/rss/search?q=(%22Tech+Lay+Off%22+OR+%22Lay+Off%22+OR+%22Job+Cut%22)+AND+%22AI%22&hl=en-US&gl=US&ceid=US:en",
     },
+    NewsFeedSource {
+        name: "The American Bazaar",
+        url: "https://americanbazaaronline.com/feed/",
+    },
+    // Mainstream & Consumer Tech
+    NewsFeedSource {
+        name: "Ars Technica",
+        url: "http://feeds.arstechnica.com/arstechnica/index",
+    },
+    NewsFeedSource {
+        name: "ZDNet",
+        url: "https://www.zdnet.com/news/rss.xml",
+    },
+    NewsFeedSource {
+        name: "CNET",
+        url: "https://www.cnet.com/rss/news/",
+    },
+    NewsFeedSource {
+        name: "PCMag",
+        url: "https://www.pcmag.com/feeds/rss/latest",
+    },
+    NewsFeedSource {
+        name: "Engadget",
+        url: "https://www.engadget.com/rss.xml",
+    },
+    NewsFeedSource {
+        name: "The Verge",
+        url: "https://www.theverge.com/rss/index.xml",
+    },
+    NewsFeedSource {
+        name: "Gizmodo",
+        url: "https://gizmodo.com/rss",
+    },
+    NewsFeedSource {
+        name: "Google News (Tech Job Layoffs)",
+        url: "https://news.google.com/rss/search?q=%22Tech+Job+Lay+off%22+OR+%22Lay+Off+AI%22+OR+%22Job+Cut+AI%22&hl=en-US&gl=US&ceid=US:en",
+    },
 ];

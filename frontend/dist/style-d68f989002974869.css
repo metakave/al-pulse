@@ -155,8 +155,8 @@ body {
 }
 
 .brand-text h1 {
-  font-family: 'Playfair Display', serif;
-  font-weight: 800;
+  font-family: 'Noticia Text', serif;
+  font-weight: 700;
   font-size: 1.8rem;
   letter-spacing: -0.02em;
   background: var(--primary-gradient);
@@ -796,7 +796,7 @@ body {
 
 .footer-text {
   line-height: 1.8;
-  max-inline-size: 800px;
+  max-inline-size: 100%;
   margin-inline: auto;
 }
 

@@ -188,5 +188,9 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "BBC News AI",
         url: "https://feeds.bbci.co.uk/news/topics/ce1qrvleleqt/rss.xml",
     },
+    NewsFeedSource {
+        name: "The Information",
+        url: "https://www.theinformation.com/feed",
+    },
 ];
 

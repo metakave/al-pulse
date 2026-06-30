@@ -1013,7 +1013,7 @@ fn Home() -> impl IntoView {
                                                                  <span>{date_display}</span>
                                                                  <a class="read-link" href=url_display target="_blank" rel="noopener noreferrer">
                                                                      {move || localize(lang.get(), "read")}
-                                                                     <span class="arrow">" ↗"</span>
+                                                                     <span class="arrow">" ->"</span>
                                                                  </a>
                                                              </div>
                                                          </article>

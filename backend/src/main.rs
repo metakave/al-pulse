@@ -335,9 +335,15 @@ async fn fetch_and_save_feeds(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::er
                                         }
                                     };
 
-                                    let category = categorize_article(&title_en, &summary_en);
+                                     let category = match categorize_article(&title_en, &summary_en) {
+                                         Some(c) => c,
+                                         None => {
+                                             println!("Skipping non-tech/AI article: {}", title_en);
+                                             continue;
+                                         }
+                                     };
 
-                                    // Get timestamp, fall back to current time
+                                     // Get timestamp, fall back to current time
                                     let published_at = entry.published.or(entry.updated)
                                         .map(|dt| dt.timestamp())
                                         .unwrap_or_else(|| chrono::Utc::now().timestamp());
@@ -389,8 +395,23 @@ async fn fetch_and_save_feeds(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::er
 }
 
 // Helper: Categorizes article based on title & description keywords
-fn categorize_article(title: &str, summary: &str) -> &'static str {
+fn categorize_article(title: &str, summary: &str) -> Option<&'static str> {
     let text = format!("{} {}", title, summary).to_lowercase();
+
+    // False Positive Check: ignore clearly unrelated consumer articles
+    if text.contains("crossword")
+        || text.contains("puzzle")
+        || text.contains("wordle")
+        || text.contains("connections hint")
+        || text.contains("nyt mini")
+        || text.contains("deals")
+        || text.contains("black friday")
+        || text.contains("cyber monday")
+        || text.contains("promo code")
+        || text.contains("gift guide")
+    {
+        return None;
+    }
 
     // Check Job Impact keywords first to prioritize it
     if text.contains("layoff")
@@ -411,7 +432,7 @@ fn categorize_article(title: &str, summary: &str) -> &'static str {
         || text.contains("create jobs")
         || text.contains("job creation")
     {
-        return "Job Impact";
+        return Some("Job Impact");
     }
 
     if text.contains("llm")
@@ -427,7 +448,7 @@ fn categorize_article(title: &str, summary: &str) -> &'static str {
         || text.contains("openai")
         || text.contains("prompt engineering")
     {
-        return "LLMs & Generative AI";
+        return Some("LLMs & Generative AI");
     }
 
     if text.contains("robot")
@@ -440,7 +461,7 @@ fn categorize_article(title: &str, summary: &str) -> &'static str {
         || text.contains("tesla bot")
         || text.contains("figure ai")
     {
-        return "Robotics & Autonomous";
+        return Some("Robotics & Autonomous");
     }
 
     if text.contains("ethics")
@@ -455,7 +476,7 @@ fn categorize_article(title: &str, summary: &str) -> &'static str {
         || text.contains("eu ai act")
         || text.contains("censor")
     {
-        return "AI Ethics & Policy";
+        return Some("AI Ethics & Policy");
     }
 
     if text.contains("research")
@@ -468,11 +489,37 @@ fn categorize_article(title: &str, summary: &str) -> &'static str {
         || text.contains("academic")
         || text.contains("benchmark")
     {
-        return "Research & Science";
+        return Some("Research & Science");
     }
 
-    // Default category
-    "Industry & Tech Giants"
+    // Default Tech Giants fallback (must have SOME tech/AI relevance)
+    if text.contains(" artificial intelligence")
+        || text.contains(" machine learning")
+        || text.contains(" ai ")
+        || text.contains(" ai,")
+        || text.contains(" ai.")
+        || text.contains(" ai:")
+        || text.starts_with("ai ")
+        || text.contains(" tech")
+        || text.contains(" software")
+        || text.contains(" hardware")
+        || text.contains(" startup")
+        || text.contains(" google")
+        || text.contains(" microsoft")
+        || text.contains(" meta")
+        || text.contains(" apple")
+        || text.contains(" nvidia")
+        || text.contains(" amd")
+        || text.contains(" intel")
+        || text.contains(" algorithm")
+        || text.contains(" cyber")
+        || text.contains(" cloud")
+        || text.contains(" data ")
+    {
+        return Some("Industry & Tech Giants");
+    }
+
+    None
 }
 
 // Helper: Strips simple HTML tags and normalizes entities

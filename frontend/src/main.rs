@@ -266,6 +266,7 @@ fn App() -> impl IntoView {
                 <Route path="/:category" view=|| view! { <Home /> } />
                 <Route path="*any" view=|| view! { "Page not found." } />
             </Routes>
+            <Footer />
         </Router>
     }
 }
@@ -901,7 +902,6 @@ fn Home() -> impl IntoView {
                             Err(_) => {
                                 view! {
                                     <div class="empty-state" style="border-color: var(--favorite-color);">
-                                        <Footer />
                                     </div>
                                 }.into_view()
                             }
@@ -918,7 +918,7 @@ fn Home() -> impl IntoView {
             </main>
 
             /* Persistent Footer */
-                        <Footer />
+            /* Persistent Footer Removed - Now in App */
 
 
             /* Floating Toasts */

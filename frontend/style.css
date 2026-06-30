@@ -113,7 +113,7 @@ body {
   justify-content: space-between;
   gap: 1.5rem;
   margin-inline: auto;
-  margin-block-end: 2.5rem;
+  margin-block-end: 1.25rem;
   padding-inline: 1.5rem;
   padding-block-end: 1.5rem;
   border-block-end: 1px solid var(--panel-border);
@@ -348,7 +348,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  margin-block-end: 2.5rem;
+  margin-block-end: 1.25rem;
 }
 
 /* Search bar design */

@@ -267,6 +267,17 @@ fn App() -> impl IntoView {
     let (search_query, set_search_query) = create_signal(String::new());
     let (active_category, set_active_category) = create_signal("All".to_string());
     let (active_tab, set_active_tab) = create_signal(Tab::Latest);
+    let (current_page, set_current_page) = create_signal(1usize);
+
+    create_effect(move |_| {
+        // Track the inputs so we reset the page whenever they change
+        let _ = active_category.get();
+        let _ = active_tab.get();
+        let _ = search_query.get();
+        
+        // Reset current page to 1
+        set_current_page.set(1);
+    });
 
     let on_theme_toggle = move |_| {
         let next_theme = if theme.get() == Theme::Dark { Theme::Light } else { Theme::Dark };
@@ -352,8 +363,8 @@ fn App() -> impl IntoView {
         }
     });
 
-    // 6. Shuffling mechanism: triggers random card ordering every 45 seconds
-    let (shuffle_seed, set_shuffle_seed) = create_signal(0usize);
+    // 6. Cycling mechanism: rotates card position every 12 seconds
+    let (cycle_offset, set_cycle_offset) = create_signal(0usize);
     let (is_fading, set_is_fading) = create_signal(false);
     
     create_effect(move |_| {
@@ -361,12 +372,12 @@ fn App() -> impl IntoView {
             // Step 1: Start fade out
             set_is_fading.set(true);
             
-            // Step 2: Swap order and fade in after a brief delay
+            // Step 2: Cycle position and fade in after a brief delay
             set_timeout(move || {
-                set_shuffle_seed.update(|seed| *seed += 1);
+                set_cycle_offset.update(|offset| *offset += 1);
                 set_is_fading.set(false);
-            }, std::time::Duration::from_millis(300));
-        }, std::time::Duration::from_secs(45));
+            }, std::time::Duration::from_millis(350));
+        }, std::time::Duration::from_secs(12));
     });
 
     // 7. Initial hook to load synchronization status
@@ -629,145 +640,201 @@ fn App() -> impl IntoView {
                                         </div>
                                     }.into_view()
                                 } else {
-                                     // Shuffle items using a simple seed-based hashing selector
-                                     let mut shuffled_items = items;
-                                     let seed = shuffle_seed.get();
-                                     if seed > 0 {
-                                         // Deterministically pseudo-randomize item layout using their ID hashes
-                                         shuffled_items.sort_by(|a, b| {
-                                             let hash_a = a.id.chars().fold(seed, |acc, c| acc.wrapping_add(c as usize).wrapping_mul(31));
-                                             let hash_b = b.id.chars().fold(seed, |acc, c| acc.wrapping_add(c as usize).wrapping_mul(31));
-                                             hash_a.cmp(&hash_b)
-                                         });
-                                     }
-
+                                     // 1. Pagination slice
+                                     let page_size = 48usize;
+                                     let total_items = items.len();
+                                     let total_pages = (total_items + page_size - 1) / page_size;
+                                     
                                      view! {
                                          <div class=move || if is_fading.get() { "news-grid grid-fade-out" } else { "news-grid" }>
-                                             {shuffled_items.into_iter().enumerate().map(|(idx, item)| {
-                                                 let current_lang = lang.get();
-                                                 let item_id = item.id.clone();
-                                                 let is_fav = item.is_favorite;
+                                             {move || {
+                                                 let current_p = current_page.get().min(total_pages).max(1);
+                                                 let start_idx = (current_p - 1) * page_size;
+                                                 let mut page_items = items.clone().into_iter().skip(start_idx).take(page_size).collect::<Vec<_>>();
                                                  
-                                                 // Scan job impact status from English texts
-                                                 let job_loss = is_job_displacement(&item.title_en, &item.summary_en.clone().unwrap_or_default());
+                                                 let page_len = page_items.len();
+                                                 if page_len > 0 {
+                                                     let offset = cycle_offset.get() % page_len;
+                                                     page_items.rotate_left(offset);
+                                                 }
                                                  
-                                                 // Localize text fields based on Language Switcher
-                                                 let title_display = if current_lang == Language::Bn { item.title_bn.clone() } else { item.title_en.clone() };
-                                                 let summary_display = if current_lang == Language::Bn { 
-                                                     item.summary_bn.clone().unwrap_or_default() 
-                                                 } else { 
-                                                     item.summary_en.clone().unwrap_or_default() 
-                                                 };
-                                                 
-                                                 let category_display = translate_category(current_lang, &item.category);
-                                                 let source_display = translate_source(current_lang, &item.source);
-                                                 let date_display = format_relative_time(current_lang, item.published_at);
-                                                 
-                                                 let cat_class = match item.category.as_str() {
-                                                     "LLMs & Generative AI" => "category-badge llm",
-                                                     "Robotics & Autonomous" => "category-badge robotics",
-                                                     "Industry & Tech Giants" => "category-badge giants",
-                                                     "Research & Science" => "category-badge research",
-                                                     "AI Ethics & Policy" => "category-badge ethics",
-                                                     "Job Impact" => "category-badge job-impact",
-                                                     _ => "category-badge",
-                                                 };
-                                                 
-                                                 let card_classes = if job_loss { 
-                                                     if is_fading.get() { "news-card job-impact fading" } else { "news-card job-impact" } 
-                                                 } else { 
-                                                     if is_fading.get() { "news-card fading" } else { "news-card" }
-                                                 };
-                                                 let url_display = item.url.clone();
-                                                 
-                                                 let on_fav_toggle = move |e: web_sys::MouseEvent| {
-                                                     e.stop_propagation();
-                                                     let next_fav = !is_fav;
+                                                 page_items.into_iter().enumerate().map(|(idx, item)| {
+                                                     let current_lang = lang.get();
+                                                     let item_id = item.id.clone();
+                                                     let is_fav = item.is_favorite;
                                                      
-                                                     // Optimistic UI updates
-                                                     let id_for_update = item_id.clone();
-                                                     news_resource.update(move |data| {
-                                                         if let Some(Ok(ref mut list)) = data {
-                                                             if let Some(target) = list.iter_mut().find(|i| i.id == id_for_update) {
-                                                                 target.is_favorite = next_fav;
-                                                             }
-                                                         }
-                                                     });
-
-                                                     // Send backend updates
-                                                     let id_param = item_id.clone();
-                                                     spawn_local(async move {
-                                                         let payload = serde_json::json!({ "is_favorite": next_fav });
-                                                         let url = format!("/api/news/{}/favorite", id_param);
-                                                         match Request::post(&url)
-                                                             .header("Content-Type", "application/json")
-                                                             .json(&payload)
-                                                         {
-                                                             Ok(builder) => {
-                                                                 if let Ok(response) = builder.send().await {
-                                                                     if response.ok() {
-                                                                         let toast_key = if next_fav { "toast_fav_added" } else { "toast_fav_removed" };
-                                                                         show_toast(localize(current_lang, toast_key));
-                                                                     } else {
-                                                                         show_toast("Failed to update favorites.");
-                                                                     }
-                                                                 } else {
-                                                                     show_toast("Connection error.");
+                                                     let job_loss = is_job_displacement(&item.title_en, &item.summary_en.clone().unwrap_or_default());
+                                                     
+                                                     let title_display = if current_lang == Language::Bn { item.title_bn.clone() } else { item.title_en.clone() };
+                                                     let summary_display = if current_lang == Language::Bn { 
+                                                         item.summary_bn.clone().unwrap_or_default() 
+                                                     } else { 
+                                                         item.summary_en.clone().unwrap_or_default() 
+                                                     };
+                                                     
+                                                     let category_display = translate_category(current_lang, &item.category);
+                                                     let source_display = translate_source(current_lang, &item.source);
+                                                     let date_display = format_relative_time(current_lang, item.published_at);
+                                                     
+                                                     let cat_class = match item.category.as_str() {
+                                                         "LLMs & Generative AI" => "category-badge llm",
+                                                         "Robotics & Autonomous" => "category-badge robotics",
+                                                         "Industry & Tech Giants" => "category-badge giants",
+                                                         "Research & Science" => "category-badge research",
+                                                         "AI Ethics & Policy" => "category-badge ethics",
+                                                         "Job Impact" => "category-badge job-impact",
+                                                         _ => "category-badge",
+                                                     };
+                                                     
+                                                     let card_classes = if job_loss { 
+                                                         if is_fading.get() { "news-card job-impact fading" } else { "news-card job-impact" } 
+                                                     } else { 
+                                                         if is_fading.get() { "news-card fading" } else { "news-card" }
+                                                     };
+                                                     
+                                                     let url_display = item.url.clone();
+                                                     
+                                                     let on_fav_toggle = move |e: web_sys::MouseEvent| {
+                                                         e.stop_propagation();
+                                                         let next_fav = !is_fav;
+                                                         
+                                                         let id_for_update = item_id.clone();
+                                                         news_resource.update(move |data| {
+                                                             if let Some(Ok(ref mut list)) = data {
+                                                                 if let Some(target) = list.iter_mut().find(|i| i.id == id_for_update) {
+                                                                     target.is_favorite = next_fav;
                                                                  }
                                                              }
-                                                             Err(_) => show_toast("Error building request."),
-                                                         }
-                                                     });
-                                                 };
+                                                         });
 
+                                                         let id_param = item_id.clone();
+                                                         spawn_local(async move {
+                                                             let payload = serde_json::json!({ "is_favorite": next_fav });
+                                                             let url = format!("/api/news/{}/favorite", id_param);
+                                                             match Request::post(&url)
+                                                                 .header("Content-Type", "application/json")
+                                                                 .json(&payload)
+                                                             {
+                                                                 Ok(builder) => {
+                                                                     if let Ok(response) = builder.send().await {
+                                                                         if response.ok() {
+                                                                             let toast_key = if next_fav { "toast_fav_added" } else { "toast_fav_removed" };
+                                                                             show_toast(localize(current_lang, toast_key));
+                                                                         } else {
+                                                                             show_toast("Failed to update favorites.");
+                                                                         }
+                                                                     } else {
+                                                                         show_toast("Connection error.");
+                                                                     }
+                                                                 }
+                                                                 Err(_) => show_toast("Error building request."),
+                                                             }
+                                                         });
+                                                     };
+
+                                                     view! {
+                                                         <article class=card_classes style=format!("order: {}", idx)>
+                                                             <div class="card-meta">
+                                                                 <span class="source-badge">{source_display}</span>
+                                                                 {if job_loss {
+                                                                     view! {
+                                                                         <span class="job-impact-badge">
+                                                                             {move || localize(lang.get(), "job_impact_badge")}
+                                                                         </span>
+                                                                     }.into_view()
+                                                                 } else {
+                                                                     view! {
+                                                                         <span class=cat_class>{category_display.clone()}</span>
+                                                                     }.into_view()
+                                                                 }}
+                                                                 
+                                                                 <button 
+                                                                     class=move || if is_fav { "favorite-btn is-fav" } else { "favorite-btn" }
+                                                                     on:click=on_fav_toggle
+                                                                     title=if is_fav { "Remove from favorites" } else { "Save to favorites" }
+                                                                 >
+                                                                     <svg viewBox="0 0 24 24">
+                                                                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                                     </svg>
+                                                                 </button>
+                                                             </div>
+                                                             
+                                                             <div class="card-content">
+                                                                 <a class="card-title" href=url_display.clone() target="_blank" rel="noopener noreferrer">
+                                                                     {title_display}
+                                                                 </a>
+                                                                 <p class="card-summary">{summary_display}</p>
+                                                             </div>
+                                                             
+                                                             <div class="card-footer">
+                                                                 <span>{date_display}</span>
+                                                                 <a class="read-link" href=url_display target="_blank" rel="noopener noreferrer">
+                                                                     {move || localize(lang.get(), "read")}
+                                                                     <span class="arrow">" ↗"</span>
+                                                                 </a>
+                                                             </div>
+                                                         </article>
+                                                     }
+                                                 }).collect::<Vec<_>>()
+                                             }}
+                                         </div>
+
+                                         // Pagination Component
+                                         {move || {
+                                             if total_pages > 1 {
                                                  view! {
-                                                     <article class=card_classes style=format!("order: {}", idx)>
-                                                         <div class="card-meta">
-                                                             <span class="source-badge">{source_display}</span>
-                                                             
-                                                             // Highlight with Job Impact Badge if flagged
-                                                             {if job_loss {
-                                                                 view! {
-                                                                     <span class="job-impact-badge">
-                                                                         {move || localize(lang.get(), "job_impact_badge")}
-                                                                     </span>
-                                                                 }.into_view()
-                                                             } else {
-                                                                 view! {
-                                                                     <span class=cat_class>{category_display.clone()}</span>
-                                                                 }.into_view()
-                                                             }}
-                                                             
-                                                             <button 
-                                                                 class=move || if is_fav { "favorite-btn is-fav" } else { "favorite-btn" }
-                                                                 on:click=on_fav_toggle
-                                                                 title=if is_fav { "Remove from favorites" } else { "Save to favorites" }
-                                                             >
-                                                                 <svg viewBox="0 0 24 24">
-                                                                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                                                                 </svg>
-                                                             </button>
-                                                         </div>
+                                                     <div class="pagination-container">
+                                                         <button 
+                                                             class="pagination-btn"
+                                                             disabled=move || current_page.get().min(total_pages).max(1).le(&1)
+                                                             on:click=move |_| {
+                                                                 let p = current_page.get().min(total_pages).max(1);
+                                                                 if p > 1 {
+                                                                     set_current_page.set(p - 1);
+                                                                     if let Some(window) = web_sys::window() {
+                                                                         window.scroll_to_with_x_and_y(0.0, 400.0);
+                                                                     }
+                                                                 }
+                                                             }
+                                                         >
+                                                             {move || if lang.get() == Language::Bn { "পূর্ববর্তী" } else { "Previous" }}
+                                                         </button>
                                                          
-                                                         <div class="card-content">
-                                                             <a class="card-title" href=url_display.clone() target="_blank" rel="noopener noreferrer">
-                                                                 {title_display}
-                                                            </a>
-                                                            <p class="card-summary">{summary_display}</p>
-                                                        </div>
-                                                        
-                                                        <div class="card-footer">
-                                                            <span>{date_display}</span>
-                                                            <a class="read-link" href=url_display target="_blank" rel="noopener noreferrer">
-                                                                {move || localize(lang.get(), "read")}
-                                                                <span class="arrow">" ↗"</span>
-                                                            </a>
-                                                        </div>
-                                                    </article>
-                                                }
-                                            }).collect::<Vec<_>>()}
-                                        </div>
-                                    }.into_view()
+                                                         <span class="pagination-info">
+                                                             {move || {
+                                                                 let current_p = current_page.get().min(total_pages).max(1);
+                                                                 let page_str = if lang.get() == Language::Bn { translate_digits(current_p as i64) } else { current_p.to_string() };
+                                                                 let total_str = if lang.get() == Language::Bn { translate_digits(total_pages as i64) } else { total_pages.to_string() };
+                                                                 if lang.get() == Language::Bn {
+                                                                     format!("পৃষ্ঠা {} এর {}", page_str, total_str)
+                                                                 } else {
+                                                                     format!("Page {} of {}", page_str, total_str)
+                                                                 }
+                                                             }}
+                                                         </span>
+                                                         
+                                                         <button 
+                                                             class="pagination-btn"
+                                                             disabled=move || current_page.get().min(total_pages).max(1).ge(&total_pages)
+                                                             on:click=move |_| {
+                                                                 let p = current_page.get().min(total_pages).max(1);
+                                                                 if p < total_pages {
+                                                                     set_current_page.set(p + 1);
+                                                                     if let Some(window) = web_sys::window() {
+                                                                         window.scroll_to_with_x_and_y(0.0, 400.0);
+                                                                     }
+                                                                 }
+                                                             }
+                                                         >
+                                                             {move || if lang.get() == Language::Bn { "পরবর্তী" } else { "Next" }}
+                                                         </button>
+                                                     </div>
+                                                 }.into_view()
+                                             } else {
+                                                 view! { <div /> }.into_view()
+                                             }
+                                         }}
+                                     }.into_view()
                                 }
                             }
                             Err(_) => {

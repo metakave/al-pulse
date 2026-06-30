@@ -176,4 +176,9 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "Google News (Autonomous Car)",
         url: "https://news.google.com/rss/search?q=%22autonomous+car%22&hl=en-US&gl=US&ceid=US:en",
     },
+    NewsFeedSource {
+        name: "Times of India Technology",
+        url: "https://timesofindia.indiatimes.com/rssfeeds/66949542.cms",
+    },
 ];
+

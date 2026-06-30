@@ -192,5 +192,9 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "The Information",
         url: "https://www.theinformation.com/feed",
     },
+    NewsFeedSource {
+        name: "Google News (AI Jobs)",
+        url: "https://news.google.com/rss/search?q=AI+Jobs&hl=en-US&gl=US&ceid=US:en",
+    },
 ];
 

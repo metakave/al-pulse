@@ -184,5 +184,9 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "Bloomberg Professional Insights",
         url: "https://news.google.com/rss/search?q=site:bloomberg.com/professional/insights/+%22artificial+intelligence%22&hl=en-US&gl=US&ceid=US:en",
     },
+    NewsFeedSource {
+        name: "BBC News AI",
+        url: "https://feeds.bbci.co.uk/news/topics/ce1qrvleleqt/rss.xml",
+    },
 ];
 

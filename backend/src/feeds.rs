@@ -180,5 +180,9 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "Times of India Technology",
         url: "https://timesofindia.indiatimes.com/rssfeeds/66949542.cms",
     },
+    NewsFeedSource {
+        name: "Bloomberg Professional Insights",
+        url: "https://news.google.com/rss/search?q=site:bloomberg.com/professional/insights/+%22artificial+intelligence%22&hl=en-US&gl=US&ceid=US:en",
+    },
 ];
 

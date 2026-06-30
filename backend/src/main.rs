@@ -425,6 +425,10 @@ fn categorize_article(title: &str, summary: &str) -> Option<&'static str> {
         || text.contains("cyber monday")
         || text.contains("promo code")
         || text.contains("gift guide")
+        || text.contains("archaeolog")
+        || text.contains("history")
+        || text.contains("entertainment")
+        || text.contains("quiz")
     {
         return None;
     }

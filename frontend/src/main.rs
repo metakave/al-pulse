@@ -371,9 +371,9 @@ fn App() -> impl IntoView {
     let (lang, set_lang) = create_signal(Language::En);
     let (theme, set_theme) = create_signal(Theme::Light);
     let (last_sync_timestamp, set_last_sync_timestamp) = create_signal(None::<i64>);
-    let (seconds_to_sync, set_seconds_to_sync) = create_signal(2700); 
+    let (seconds_to_sync, set_seconds_to_sync) = create_signal(2700i64); 
     let (active_tab, set_active_tab) = create_signal(Tab::Latest);
-    let (refresh_trigger, set_refresh_trigger) = create_signal(0);
+    let (refresh_trigger, set_refresh_trigger) = create_signal(0i32);
     
     let trigger_sync_action = create_action(move |_: &()| {
         async move {

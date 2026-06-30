@@ -9,6 +9,7 @@ use axum::{
 // Export feed definitions for reuse
 mod feeds;
 use feeds::FEEDS;
+use html_escape::decode_html_entities;
 use serde::Deserialize;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -303,23 +304,25 @@ async fn fetch_and_save_feeds(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::er
 
                                     // Clean title and source
                                     let raw_title = entry.title.map(|t| t.content).unwrap_or_else(|| "Untitled Headline".to_string());
-                                     let (title_en, actual_source) = if feed.name.starts_with("Google News") {
-                                         let parts: Vec<&str> = raw_title.rsplitn(2, " - ").collect();
-                                         if parts.len() == 2 {
-                                             (parts[1].trim().to_string(), parts[0].trim().to_string())
-                                         } else {
-                                             let clean_name = feed.name
-                                                 .replace("Google News", "")
-                                                 .replace("(", "")
-                                                 .replace(")", "")
-                                                 .trim()
-                                                 .to_string();
-                                             let clean_name = if clean_name.is_empty() { "News Search".to_string() } else { clean_name };
-                                             (raw_title, clean_name)
-                                         }
-                                     } else {
-                                         (raw_title, feed.name.to_string())
-                                     };
+                                    // Decode HTML entities in title
+                                    let decoded_title = decode_html_entities(&raw_title).to_string();
+                                    let (title_en, actual_source) = if feed.name.starts_with("Google News") {
+                                        let parts: Vec<&str> = decoded_title.rsplitn(2, " - ").collect();
+                                        if parts.len() == 2 {
+                                            (parts[1].trim().to_string(), parts[0].trim().to_string())
+                                        } else {
+                                            let clean_name = feed.name
+                                                .replace("Google News", "")
+                                                .replace("(", "")
+                                                .replace(")", "")
+                                                .trim()
+                                                .to_string();
+                                            let clean_name = if clean_name.is_empty() { "News Search".to_string() } else { clean_name };
+                                            (decoded_title, clean_name)
+                                        }
+                                    } else {
+                                        (decoded_title, feed.name.to_string())
+                                    };
                                      
                                      if actual_source.to_lowercase().contains("arxiv") {
                                          println!("Skipping arXiv source: {}", actual_source);
@@ -330,8 +333,9 @@ async fn fetch_and_save_feeds(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::er
                                     let raw_summary = entry.summary.map(|s| s.content)
                                         .or_else(|| entry.content.and_then(|c| c.body))
                                         .unwrap_or_default();
-
-                                    let summary_en = strip_html(&raw_summary);
+                                    // Decode HTML entities in summary before stripping HTML
+                                    let decoded_summary = decode_html_entities(&raw_summary);
+                                    let summary_en = strip_html(&decoded_summary);
 
                                     // Translate title and summary into Bengali
                                     println!("Translating English headline: \"{}\"", title_en);

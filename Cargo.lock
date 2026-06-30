@@ -181,6 +181,7 @@ dependencies = [
  "chrono",
  "dotenvy",
  "feed-rs",
+ "html-escape",
  "reqwest",
  "serde",
  "serde_json",

@@ -87,6 +87,12 @@ pub fn GlobalHeader() -> impl IntoView {
             /* Nav and Status */
             <div class="nav-and-status">
                 <div class="desktop-controls">
+                    <ul class="desktop-nav-links" style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; margin-right: 1.5rem;">
+                        <li><a href="/weekly-roundup" style="text-decoration: none; color: var(--text-secondary); font-weight: 500;">"Weekly AI Roundup"</a></li>
+                        <li><a href="/about" style="text-decoration: none; color: var(--text-secondary); font-weight: 500;">"About AI PulseQ"</a></li>
+                        <li><a href="/changelog" style="text-decoration: none; color: var(--text-secondary); font-weight: 500;">"Version"</a></li>
+                        <li><a href="/sources" style="text-decoration: none; color: var(--text-secondary); font-weight: 500;">"Sources"</a></li>
+                    </ul>
                     <div class="lang-switcher">
                         <button 
                             class=move || if lang.get() == Language::En { "lang-btn active" } else { "lang-btn" }
@@ -107,43 +113,39 @@ pub fn GlobalHeader() -> impl IntoView {
                 </div>
 
                 <div class="status-widget">
-                    <div class="status-info">
-                        <div class=move || if trigger_sync_action.pending().get() { "status-indicator syncing" } else { "status-indicator" }></div>
-                        <div class="status-text">
-                            <button 
-                                class="sync-btn"
-                                disabled=move || trigger_sync_action.pending().get()
-                                on:click=move |_| trigger_sync_action.dispatch(())
-                            >
-                                {move || if trigger_sync_action.pending().get() {
-                                    view! { <span class="sync-spinner"></span> }.into_view()
-                                } else {
-                                    view! {
-                                        <svg class="sync-icon-svg" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                            <polyline points="23 4 23 10 17 10"></polyline>
-                                            <polyline points="1 20 1 14 7 14"></polyline>
-                                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                                        </svg>
-                                        <span class="sync-text">{localize(lang.get(), "sync_now")}</span>
-                                    }.into_view()
-                                }}
-                            </button>
-                            <span class="next-sync-label">
-                                {move || {
-                                    let total_secs = seconds_to_sync.get();
-                                    if trigger_sync_action.pending().get() {
-                                        localize(lang.get(), "syncing").to_string()
-                                    } else if last_sync_timestamp.get().is_none() {
-                                        localize(lang.get(), "auto_sync").to_string() + "..."
-                                    } else {
-                                        let m = total_secs / 60;
-                                        let s = total_secs % 60;
-                                        format!("{}{:02}:{:02}", localize(lang.get(), "auto_sync"), m, s)
-                                    }
-                                }}
-                            </span>
-                        </div>
-                    </div>
+                    <div class=move || if trigger_sync_action.pending().get() { "status-indicator syncing" } else { "status-indicator" }></div>
+                    <span class="sync-time-text next-sync-label">
+                        {move || {
+                            let total_secs = seconds_to_sync.get();
+                            if trigger_sync_action.pending().get() {
+                                localize(lang.get(), "syncing").to_string()
+                            } else if last_sync_timestamp.get().is_none() {
+                                localize(lang.get(), "auto_sync").to_string() + "..."
+                            } else {
+                                let m = total_secs / 60;
+                                let s = total_secs % 60;
+                                format!("{}{:02}:{:02}", localize(lang.get(), "auto_sync"), m, s)
+                            }
+                        }}
+                    </span>
+                    <button 
+                        class="refresh-btn sync-btn"
+                        disabled=move || trigger_sync_action.pending().get()
+                        on:click=move |_| trigger_sync_action.dispatch(())
+                    >
+                        {move || if trigger_sync_action.pending().get() {
+                            view! { <span class="sync-spinner"></span> }.into_view()
+                        } else {
+                            view! {
+                                <svg class="sync-icon-svg" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <polyline points="1 20 1 14 7 14"></polyline>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                </svg>
+                                <span class="sync-text">{localize(lang.get(), "sync_now")}</span>
+                            }.into_view()
+                        }}
+                    </button>
                 </div>
 
                 /* Hamburger Button */

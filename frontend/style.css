@@ -932,7 +932,7 @@ body {
   border: none;
   color: var(--text-primary);
   cursor: pointer;
-  display: flex;
+  display: none; /* hidden on desktop */
   align-items: center;
   justify-content: center;
   padding: 8px;
@@ -1057,6 +1057,14 @@ body {
   
   .sidebar-mobile-controls {
     display: flex;
+  }
+  
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .next-sync-label {
+    display: none;
   }
   
   .sync-text {

@@ -210,7 +210,7 @@ fn format_relative_time(lang: Language, timestamp: i64) -> String {
 // Job Impact / Layoff Keyword Scanner (scans English fields)
 fn is_job_displacement(title: &str, summary: &str) -> bool {
     let text = format!("{} {}", title, summary).to_lowercase();
-    text.contains("layoff") || text.contains("laid off") ||
+    text.contains("layoff") || text.contains("lay off") || text.contains("laid off") ||
     text.contains("job loss") || text.contains("job cut") ||
     text.contains("cut jobs") || text.contains("lose jobs") ||
     text.contains("replace workers") || text.contains("worker replacement") ||
@@ -231,7 +231,7 @@ fn AboutPage() -> impl IntoView {
                     "AI Pulse is a curated intelligence platform dedicated to aggregating, analyzing, and synthesizing artificial intelligence news from around the globe. In an era where technological advancements shift daily, keeping pace with generative models, LLMs, robotic automations, policies, and industry transformations can be overwhelming. AI Pulse aims to simplify that landscape by providing clean, condensed, and accessible bilingual summaries."
                 </p>
                 <p class="about-paragraph">
-                    "This platform operates with a built-in automated polling system that crawls authoritative global tech channels every 30 minutes, translates key updates into Bengali using real-time endpoints, and auto-categorizes articles. Special attention is given to tracking automation's impact on employment, highlighting job layoffs and displacement warnings."
+                    "This platform operates with a built-in automated polling system that crawls authoritative global tech channels every 45 minutes, translates key updates into Bengali using real-time endpoints, and auto-categorizes articles. Special attention is given to tracking automation's impact on employment, highlighting job layoffs and displacement warnings."
                 </p>
                 <p class="about-paragraph">
                     "The ideation, design, and technical execution of this curation project was done by "
@@ -296,7 +296,7 @@ fn App() -> impl IntoView {
     
     // 2. Status Signals
     let (last_sync_timestamp, set_last_sync_timestamp) = create_signal(None::<i64>);
-    let (seconds_to_sync, set_seconds_to_sync) = create_signal(1800); 
+    let (seconds_to_sync, set_seconds_to_sync) = create_signal(2700); 
     let (toasts, set_toasts) = create_signal(Vec::<Toast>::new());
 
     // Helper: Toast Manager
@@ -363,7 +363,7 @@ fn App() -> impl IntoView {
         }
     });
 
-    // 6. Cycling mechanism: rotates card position every 12 seconds
+    // 6. Cycling mechanism: rotates card position every 60 seconds
     let (cycle_offset, set_cycle_offset) = create_signal(0usize);
     let (is_fading, set_is_fading) = create_signal(false);
     
@@ -377,7 +377,7 @@ fn App() -> impl IntoView {
                 set_cycle_offset.update(|offset| *offset += 1);
                 set_is_fading.set(false);
             }, std::time::Duration::from_millis(350));
-        }, std::time::Duration::from_secs(12));
+        }, std::time::Duration::from_secs(60));
     });
 
     // 7. Initial hook to load synchronization status
@@ -413,7 +413,7 @@ fn App() -> impl IntoView {
         let _ = set_interval_with_handle(move || {
             if let Some(last) = last_sync_timestamp.get() {
                 let now = (js_sys::Date::now() / 1000.0) as i64;
-                let diff = (last + 30 * 60) - now;
+                let diff = (last + 45 * 60) - now;
                 
                 if diff <= 0 {
                     if !trigger_sync_action.pending().get() {

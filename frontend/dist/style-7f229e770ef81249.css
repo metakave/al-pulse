@@ -35,7 +35,7 @@
 }
 
 [data-theme="light"] {
-  --bg-color: #f5f2eb;
+  --bg-color: #faf0e6;
   --panel-bg: rgba(248, 246, 240, 0.85); /* coordinated beige-white overlay */
   --panel-border: rgba(15, 23, 42, 0.08);
   --text-primary: #1e1b18; /* softer brown-black for premium contrast */

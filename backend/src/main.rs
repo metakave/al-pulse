@@ -58,13 +58,13 @@ async fn main() {
         last_refreshed_at: Mutex::new(chrono::Utc::now().timestamp()),
     });
 
-    // 3. Spawn periodic 30-minute background synchronization worker
+    // 3. Spawn periodic 45-minute background synchronization worker
     let pool_clone = pool.clone();
     let state_clone = state.clone();
     tokio::spawn(async move {
         loop {
-            tokio::time::sleep(tokio::time::Duration::from_secs(30 * 60)).await;
-            println!("Periodic 30-minute news synchronization started...");
+            tokio::time::sleep(tokio::time::Duration::from_secs(45 * 60)).await;
+            println!("Periodic 45-minute news synchronization started...");
             let sync_start = chrono::Utc::now().timestamp();
             match fetch_and_save_feeds(&pool_clone).await {
                 Ok(_) => {
@@ -394,6 +394,7 @@ fn categorize_article(title: &str, summary: &str) -> &'static str {
 
     // Check Job Impact keywords first to prioritize it
     if text.contains("layoff")
+        || text.contains("lay off")
         || text.contains("laid off")
         || text.contains("job loss")
         || text.contains("job cut")

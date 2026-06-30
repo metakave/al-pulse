@@ -91,4 +91,44 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "Daily FT",
         url: "https://www.ft.lk/rss/IT-Telecom-Tech",
     },
+    NewsFeedSource {
+        name: "Crunchbase News",
+        url: "https://news.crunchbase.com/feed/",
+    },
+    NewsFeedSource {
+        name: "Anthropic News",
+        url: "https://www.anthropic.com/feed.xml",
+    },
+    NewsFeedSource {
+        name: "InformationWeek",
+        url: "https://www.informationweek.com/rss.xml",
+    },
+    NewsFeedSource {
+        name: "Oracle News",
+        url: "https://www.oracle.com/news/rss/",
+    },
+    NewsFeedSource {
+        name: "Amazon News",
+        url: "https://www.aboutamazon.com/news/rss.xml",
+    },
+    NewsFeedSource {
+        name: "Cisco Newsroom",
+        url: "https://newsroom.cisco.com/c/services/i/servlets/newsroom/rssfeed.json",
+    },
+    NewsFeedSource {
+        name: "PayPal News",
+        url: "https://newsroom.paypal-corp.com/news?template=rss",
+    },
+    NewsFeedSource {
+        name: "Cloudflare Blog",
+        url: "https://blog.cloudflare.com/rss",
+    },
+    NewsFeedSource {
+        name: "Chegg Investor Relations",
+        url: "https://investor.chegg.com/rss",
+    },
+    NewsFeedSource {
+        name: "Google News (AI Layoffs & Job Cuts)",
+        url: "https://news.google.com/rss/search?q=(%22Tech+Lay+Off%22+OR+%22Lay+Off%22+OR+%22Job+Cut%22)+AND+%22AI%22&hl=en-US&gl=US&ceid=US:en",
+    },
 ];

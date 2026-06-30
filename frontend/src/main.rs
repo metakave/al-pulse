@@ -270,6 +270,7 @@ fn ChangelogPage() -> impl IntoView {
                                 <li>"Introduced a new sleek slide-in hamburger menu for desktop."</li>
                                 <li>"Optimized and cleaned up the mobile header layout."</li>
                                 <li>"Added this Change Log page to track future updates."</li>
+                                <li>"Adding Weekly Roundup."</li>
                             </ul>
                         </div>
                     </div>

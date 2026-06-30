@@ -870,7 +870,7 @@ function __wbg_get_imports() {
             return ret;
         },
         __wbindgen_cast_0000000000000003: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [NamedExternref("MouseEvent")], shim_idx: 262, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [NamedExternref("MouseEvent")], shim_idx: 260, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
             const ret = makeMutClosure(arg0, arg1, wasm_bindgen__convert__closures_____invoke__h98bf7d67821b2994);
             return ret;
         },
@@ -907,7 +907,7 @@ function __wbg_get_imports() {
     };
     return {
         __proto__: null,
-        "./frontend-b0744c9cc591fc66_bg.js": import0,
+        "./frontend-269965a776b165ec_bg.js": import0,
     };
 }
 
@@ -1281,7 +1281,7 @@ async function __wbg_init(module_or_path) {
     }
 
     if (module_or_path === undefined) {
-        module_or_path = new URL('frontend-b0744c9cc591fc66_bg.wasm', import.meta.url);
+        module_or_path = new URL('frontend-269965a776b165ec_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
 

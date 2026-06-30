@@ -43,10 +43,10 @@ pub fn WeeklyRoundupListPage() -> impl IntoView {
                                 roundups.into_iter().map(|item| {
                                     view! {
                                         <a href=format!("/weekly-roundup/{}", item.id) class="weekly-card" style="text-decoration: none; color: inherit; display: block; margin-bottom: 20px; padding: 20px; background: var(--bg-color); border-radius: 12px; box-shadow: 0 4px 6px var(--shadow-color); border: 1px solid var(--border-color);">
-                                            <h2 style="margin-top: 0; color: var(--primary-color);">
+                                            <h2 class="card-title" style="margin-top: 0;">
                                                 {let title = item.title.clone(); let title_bn = item.title_bn.clone(); move || if lang.get() == Language::Bn { title_bn.clone() } else { title.clone() }}
                                             </h2>
-                                            <p style="color: var(--text-color); margin-bottom: 0;">
+                                            <p class="card-summary" style="margin-bottom: 0;">
                                                 {let summary = item.summary.clone(); let summary_bn = item.summary_bn.clone(); move || if lang.get() == Language::Bn { summary_bn.clone() } else { summary.clone() }}
                                             </p>
                                         </a>
@@ -90,7 +90,7 @@ pub fn WeeklyRoundupDetailPage() -> impl IntoView {
                                                 {move || if lang.get() == Language::Bn { "← ফিরে যান" } else { "← Back to List" }}
                                             </a>
                                             <header class="about-header" style="text-align: left; padding: 0; margin-bottom: 30px; background: none; box-shadow: none;">
-                                                <h1 class="about-title" style="font-size: 2rem;">
+                                                <h1 class="about-title" style="font-size: 2rem; font-family: 'Playfair Display', serif;">
                                                     {let title = item.title.clone(); let title_bn = item.title_bn.clone(); move || if lang.get() == Language::Bn { title_bn.clone() } else { title.clone() }}
                                                 </h1>
                                             </header>
@@ -102,9 +102,9 @@ pub fn WeeklyRoundupDetailPage() -> impl IntoView {
                                                     paragraphs.into_iter().map(|para| {
                                                         if para.starts_with("### ") {
                                                             let title = para.trim_start_matches("### ").to_string();
-                                                            view! { <h3 style="margin-top: 1.5em; color: var(--primary-color);">{title}</h3> }.into_view()
+                                                            view! { <h3 style="margin-top: 1.5em; color: var(--primary-color); font-family: 'Playfair Display', serif;">{title}</h3> }.into_view()
                                                         } else {
-                                                            view! { <p style="margin-bottom: 1em;">{para}</p> }.into_view()
+                                                            view! { <p style="margin-bottom: 1em; color: var(--text-secondary);">{para}</p> }.into_view()
                                                         }
                                                     }).collect_view()
                                                 }}

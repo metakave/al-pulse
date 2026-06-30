@@ -319,8 +319,13 @@ async fn fetch_and_save_feeds(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::er
                                      } else {
                                          (raw_title, feed.name.to_string())
                                      };
-                                    
-                                    // Combine summary and content
+                                     
+                                     if actual_source.to_lowercase().contains("arxiv") {
+                                         println!("Skipping arXiv source: {}", actual_source);
+                                         continue;
+                                     }
+
+                                     // Combine summary and content
                                     let raw_summary = entry.summary.map(|s| s.content)
                                         .or_else(|| entry.content.and_then(|c| c.body))
                                         .unwrap_or_default();

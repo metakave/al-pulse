@@ -168,4 +168,12 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "Google News (Tech Job Layoffs)",
         url: "https://news.google.com/rss/search?q=%22Tech+Job+Lay+off%22+OR+%22Lay+Off+AI%22+OR+%22Job+Cut+AI%22&hl=en-US&gl=US&ceid=US:en",
     },
+    NewsFeedSource {
+        name: "Google News (Robo Taxi)",
+        url: "https://news.google.com/rss/search?q=%22robo+taxi%22&hl=en-US&gl=US&ceid=US:en",
+    },
+    NewsFeedSource {
+        name: "Google News (Autonomous Car)",
+        url: "https://news.google.com/rss/search?q=%22autonomous+car%22&hl=en-US&gl=US&ceid=US:en",
+    },
 ];

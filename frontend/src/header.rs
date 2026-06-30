@@ -201,7 +201,7 @@ pub fn GlobalHeader() -> impl IntoView {
                 <li><a href="/changelog" on:click=move |_| is_menu_open.set(false)>"Version & Changelog"</a></li>
             </ul>
 
-            <div style="margin-top: 20px; font-size: calc(1.1rem - 3pt); color: var(--text-muted); text-align: center; padding: 0 1rem; line-height: 1.5;">
+            <div style="margin-top: 20px; font-size: calc(1.1rem - 3pt); color: var(--text-muted); text-align: left; padding: 0 1rem; line-height: 1.5;">
                 {move || {
                     let total = total_curated.get();
                     let date_str = if let Some(ts) = last_sync_timestamp.get() {

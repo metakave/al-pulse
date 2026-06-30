@@ -907,7 +907,7 @@ function __wbg_get_imports() {
     };
     return {
         __proto__: null,
-        "./frontend-db95c52aa44ce4cc_bg.js": import0,
+        "./frontend-b0744c9cc591fc66_bg.js": import0,
     };
 }
 
@@ -1281,7 +1281,7 @@ async function __wbg_init(module_or_path) {
     }
 
     if (module_or_path === undefined) {
-        module_or_path = new URL('frontend-db95c52aa44ce4cc_bg.wasm', import.meta.url);
+        module_or_path = new URL('frontend-b0744c9cc591fc66_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
 

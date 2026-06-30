@@ -105,7 +105,7 @@ pub fn GlobalHeader() -> impl IntoView {
                             "বাংলা"
                         </button>
                     </div>
-                    <button class="theme-toggle" on:click=on_theme_toggle.clone()>
+                    <button class="theme-toggle-btn" on:click=on_theme_toggle.clone()>
                         {move || if theme.get() == Theme::Light { "🌙" } else { "☀️" }}
                     </button>
                 </div>

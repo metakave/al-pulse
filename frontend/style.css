@@ -241,7 +241,7 @@ body {
 
 .lang-btn.active {
   background: var(--primary-gradient);
-  color: #0f172a;
+  color: #ffffff;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
 }
 
@@ -305,7 +305,7 @@ body {
 
 .refresh-btn {
   background: var(--primary-gradient);
-  color: #0f172a;
+  color: #ffffff;
   border: none;
   font-family: inherit;
   font-size: 0.8rem;
@@ -438,7 +438,7 @@ body {
 
 .category-pill.active {
   background: var(--primary-gradient);
-  color: #0f172a;
+  color: #ffffff;
   border-color: transparent;
   font-weight: 700;
   box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
@@ -1045,7 +1045,7 @@ body {
 
 .sidebar-tab-btn.active {
   background: var(--primary-gradient);
-  color: #0f172a;
+  color: #ffffff;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 

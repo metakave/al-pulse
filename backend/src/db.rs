@@ -43,6 +43,23 @@ pub async fn init_db(database_url: &str) -> Result<PgPool, sqlx::Error> {
         .execute(&pool)
         .await?;
 
+    // Create visitor_counter table
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS visitor_counter (
+            id INT PRIMARY KEY,
+            count BIGINT NOT NULL DEFAULT 100
+        );"
+    )
+    .execute(&pool)
+    .await?;
+
+    // Initialize with 99 so the first visit increments it to 100
+    sqlx::query(
+        "INSERT INTO visitor_counter (id, count) VALUES (1, 99) ON CONFLICT (id) DO NOTHING;"
+    )
+    .execute(&pool)
+    .await?;
+
     Ok(pool)
 }
 
@@ -147,4 +164,13 @@ pub async fn get_news_stats(pool: &PgPool, last_sync: i64) -> Result<(i64, i64),
         .await?;
 
     Ok((total_count, since_last_sync))
+}
+
+pub async fn increment_visitor_count(pool: &PgPool) -> Result<i64, sqlx::Error> {
+    let count: i64 = sqlx::query_scalar(
+        "UPDATE visitor_counter SET count = count + 1 WHERE id = 1 RETURNING count"
+    )
+    .fetch_one(pool)
+    .await?;
+    Ok(count)
 }

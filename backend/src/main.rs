@@ -97,6 +97,7 @@ async fn main() {
         .route("/api/status", get(get_status))
         .route("/api/news/stats", get(get_news_stats_route))
         .route("/api/feeds", get(get_feeds))
+        .route("/api/visit", post(increment_visit_counter))
         .layer(cors)
         .fallback_service(serve_dir)
         .with_state(state);
@@ -209,6 +210,17 @@ async fn get_feeds() -> impl IntoResponse {
     // Map FEEDS to simple name/url objects
     let list: Vec<_> = FEEDS.iter().map(|f| serde_json::json!({"name": f.name, "url": f.url})).collect();
     Json(list)
+}
+
+// REST Route: Increment and get visitor count
+async fn increment_visit_counter(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    match db::increment_visitor_count(&state.pool).await {
+        Ok(count) => Json(serde_json::json!({ "count": count })).into_response(),
+        Err(e) => {
+            eprintln!("Database error in increment_visit_counter: {:?}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, "Database error").into_response()
+        }
+    }
 }
 // Translation Helper: Calls keyless, public Google Translate API
 async fn translate_text(text: &str, target_lang: &str) -> String {

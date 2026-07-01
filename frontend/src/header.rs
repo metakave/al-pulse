@@ -15,6 +15,7 @@ pub fn GlobalHeader() -> impl IntoView {
     let set_last_sync_timestamp = expect_context::<WriteSignal<Option<i64>>>();
     
     let (total_curated, set_total_curated) = create_signal(0_i64);
+    let (visitor_count, set_visitor_count) = create_signal(None::<i64>);
 
     // Initial hook to load synchronization status and stats
     create_effect(move |_| {
@@ -27,6 +28,15 @@ pub fn GlobalHeader() -> impl IntoView {
                     }
                     if let Some(total) = data.get("total_count").and_then(|v| v.as_i64()) {
                         set_total_curated.set(total);
+                    }
+                }
+            }
+
+            let visit_res = Request::post("/api/visit").send().await;
+            if let Ok(r) = visit_res {
+                if let Ok(data) = r.json::<serde_json::Value>().await {
+                    if let Some(count) = data.get("count").and_then(|v| v.as_i64()) {
+                        set_visitor_count.set(Some(count));
                     }
                 }
             }
@@ -166,6 +176,21 @@ pub fn GlobalHeader() -> impl IntoView {
         <div class=move || if is_menu_open.get() { "sidebar-overlay open" } else { "sidebar-overlay" } on:click=move |_| is_menu_open.set(false)></div>
         <div class=move || if is_menu_open.get() { "sidebar-menu open" } else { "sidebar-menu" }>
             <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <div class="brand-logo-container">
+                        <svg class="brand-logo-svg" viewBox="0 0 24 24" fill="currentColor" style="width: 24px; height: 24px; color: #6366f1;">
+                            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                            <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5 5 3Z"/>
+                            <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5Z"/>
+                        </svg>
+                        <div class="pulse-dot"></div>
+                    </div>
+                    <div class=move || format!("brand-text lang-{:?}", lang.get())>
+                        <a href="/" style="text-decoration: none; color: inherit;" on:click=move |_| is_menu_open.set(false)>
+                            <h1 style="font-size: 1.35rem; margin: 0; line-height: 1;">{move || localize(lang.get(), "title")}</h1>
+                        </a>
+                    </div>
+                </div>
                 <button class="close-menu-btn" on:click=move |_| is_menu_open.set(false)>
                     <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -204,27 +229,47 @@ pub fn GlobalHeader() -> impl IntoView {
                 <li><a href="/changelog" on:click=move |_| is_menu_open.set(false)>"Version & Changelog"</a></li>
             </ul>
 
-            <li style="margin-top: 20px; font-size: calc(1.1rem - 3pt); color: var(--text-muted); text-align: left; line-height: 1.5; width: 100%;">
-                {move || {
-                    let total = total_curated.get();
-                    let date_str = if let Some(ts) = last_sync_timestamp.get() {
-                        let date = js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(ts as f64 * 1000.0));
-                        let locale = if lang.get() == Language::Bn { "bn-BD" } else { "en-US" };
-                        let options = js_sys::Object::new();
-                        js_sys::Reflect::set(&options, &wasm_bindgen::JsValue::from_str("dateStyle"), &wasm_bindgen::JsValue::from_str("medium")).unwrap();
-                        js_sys::Reflect::set(&options, &wasm_bindgen::JsValue::from_str("timeStyle"), &wasm_bindgen::JsValue::from_str("short")).unwrap();
-                        date.to_locale_string(locale, &options).as_string().unwrap_or_default()
-                    } else {
-                        "".to_string()
-                    };
-                    
-                    if lang.get() == Language::Bn {
-                        format!("মোট {}টি এআই সংবাদ সংকলিত। শেষ সিঙ্ক: {}", crate::translate_digits(total), date_str)
-                    } else {
-                        format!("{} AI News articles curated. Last Synced {}", total, date_str)
-                    }
-                }}
-            </li>
+            <div class="sidebar-footer">
+                <div class="sidebar-curated-stats">
+                    {move || {
+                        let total = total_curated.get();
+                        let date_str = if let Some(ts) = last_sync_timestamp.get() {
+                            let date = js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(ts as f64 * 1000.0));
+                            let locale = if lang.get() == Language::Bn { "bn-BD" } else { "en-US" };
+                            let options = js_sys::Object::new();
+                            js_sys::Reflect::set(&options, &wasm_bindgen::JsValue::from_str("dateStyle"), &wasm_bindgen::JsValue::from_str("medium")).unwrap();
+                            js_sys::Reflect::set(&options, &wasm_bindgen::JsValue::from_str("timeStyle"), &wasm_bindgen::JsValue::from_str("short")).unwrap();
+                            date.to_locale_string(locale, &options).as_string().unwrap_or_default()
+                        } else {
+                            "".to_string()
+                        };
+                        
+                        if lang.get() == Language::Bn {
+                            format!("মোট {}টি এআই সংবাদ সংকলিত। শেষ সিঙ্ক: {}", crate::translate_digits(total), date_str)
+                        } else {
+                            format!("{} AI News articles curated. Last Synced {}", total, date_str)
+                        }
+                    }}
+                </div>
+                <div class="sidebar-visitor-counter">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="visitor-icon-svg">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span class="visitor-count-text">
+                        {move || {
+                            let count = visitor_count.get().unwrap_or(100);
+                            if lang.get() == Language::Bn {
+                                format!("ভিজিটর {}", crate::translate_digits(count))
+                            } else {
+                                format!("Visitor {}", count)
+                            }
+                        }}
+                    </span>
+                </div>
+            </div>
         </div>
     }
 }

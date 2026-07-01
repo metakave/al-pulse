@@ -3,7 +3,7 @@ use crate::NewsFeedSource;
 pub const FEEDS: &[NewsFeedSource] = &[
     NewsFeedSource {
         name: "Google News",
-        url: "https://news.google.com/rss/search?q=artificial+intelligence+OR+machine+learning+OR+generative+AI+OR+LLM+OR+%22Chinese+AI%22&hl=en-US&gl=US&ceid=US:en",
+        url: "https://news.google.com/rss/search?q=artificial+intelligence+OR+machine+learning+OR+generative+AI+OR+LLM&hl=en-US&gl=US&ceid=US:en",
     },
     NewsFeedSource {
         name: "TechCrunch",
@@ -175,6 +175,10 @@ pub const FEEDS: &[NewsFeedSource] = &[
     NewsFeedSource {
         name: "Google News (Autonomous Car)",
         url: "https://news.google.com/rss/search?q=%22autonomous+car%22&hl=en-US&gl=US&ceid=US:en",
+    },
+    NewsFeedSource {
+        name: "Google News (Chinese AI)",
+        url: "https://news.google.com/rss/search?q=%22Chinese+AI%22&hl=en-US&gl=US&ceid=US:en",
     },
     NewsFeedSource {
         name: "Times of India Technology",

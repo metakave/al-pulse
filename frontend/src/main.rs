@@ -46,6 +46,12 @@ enum Theme {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+enum ViewMode {
+    Card,
+    List,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum Tab {
     Latest,
     Archive,
@@ -461,7 +467,28 @@ fn Home() -> impl IntoView {
     let trigger_sync_action = expect_context::<Action<(), Result<i64, String>>>();
     
     let (search_query, set_search_query) = create_signal(String::new());
-    
+
+    let local_storage = web_sys::window()
+        .and_then(|w| w.local_storage().ok())
+        .flatten();
+    let initial_view = local_storage
+        .as_ref()
+        .and_then(|storage| storage.get_item("view_mode").ok())
+        .flatten()
+        .map(|v| if v == "list" { ViewMode::List } else { ViewMode::Card })
+        .unwrap_or(ViewMode::Card);
+    let (view_mode, set_view_mode) = create_signal(initial_view);
+    let on_toggle_mode = std::rc::Rc::new(move |mode: ViewMode| {
+        set_view_mode.set(mode);
+        if let Some(storage) = &local_storage {
+            let val = match mode {
+                ViewMode::Card => "card",
+                ViewMode::List => "list",
+            };
+            let _ = storage.set_item("view_mode", val);
+        }
+    });
+
     let params = use_params_map();
     let active_category = create_memo(move |_| {
         if let Some(slug) = params.get().get("category") {
@@ -620,23 +647,60 @@ fn Home() -> impl IntoView {
                     </svg>
                 </div>
 
-                <div class="categories-wrapper">
-                    <div class="categories-list">
-                        {move || categories().into_iter().map(|(id, display_name)| {
-                            let current_id = id.clone();
-                            let slug = category_to_slug(&current_id);
-                            let href = if slug.is_empty() { "/".to_string() } else { format!("/{}", slug) };
-                            let is_active = move || active_category.get() == current_id;
-                            view! {
-                                <a 
-                                    href=href
-                                    class=move || if is_active() { "category-pill active" } else { "category-pill" }
-                                >
-                                    {display_name}
-                                </a>
-                            }
-                        }).collect::<Vec<_>>()}
+                <div class="categories-row">
+                    <div class="categories-wrapper">
+                        <div class="categories-list">
+                            {move || categories().into_iter().map(|(id, display_name)| {
+                                let current_id = id.clone();
+                                let slug = category_to_slug(&current_id);
+                                let href = if slug.is_empty() { "/".to_string() } else { format!("/{}", slug) };
+                                let is_active = move || active_category.get() == current_id;
+                                view! {
+                                    <a 
+                                        href=href
+                                        class=move || if is_active() { "category-pill active" } else { "category-pill" }
+                                    >
+                                        {display_name}
+                                    </a>
+                                }
+                            }).collect::<Vec<_>>()}
+                        </div>
                     </div>
+
+                    {
+                        let toggle_card = on_toggle_mode.clone();
+                        let toggle_list = on_toggle_mode.clone();
+                        view! {
+                            <div class="view-toggle">
+                                <button 
+                                    class=move || if view_mode.get() == ViewMode::Card { "toggle-btn active" } else { "toggle-btn" }
+                                    on:click=move |_| toggle_card(ViewMode::Card)
+                                    title="Card View"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="7" height="7" />
+                                        <rect x="14" y="3" width="7" height="7" />
+                                        <rect x="14" y="14" width="7" height="7" />
+                                        <rect x="3" y="14" width="7" height="7" />
+                                    </svg>
+                                </button>
+                                <button 
+                                    class=move || if view_mode.get() == ViewMode::List { "toggle-btn active" } else { "toggle-btn" }
+                                    on:click=move |_| toggle_list(ViewMode::List)
+                                    title="List View"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="8" y1="6" x2="21" y2="6" />
+                                        <line x1="8" y1="12" x2="21" y2="12" />
+                                        <line x1="8" y1="18" x2="21" y2="18" />
+                                        <line x1="3" y1="6" x2="3.01" y2="6" />
+                                        <line x1="3" y1="12" x2="3.01" y2="12" />
+                                        <line x1="3" y1="18" x2="3.01" y2="18" />
+                                    </svg>
+                                </button>
+                            </div>
+                        }
+                    }
                 </div>
             </section>
 
@@ -672,7 +736,13 @@ fn Home() -> impl IntoView {
                                      let total_pages = (total_items + page_size - 1) / page_size;
                                      
                                      view! {
-                                         <div class=move || if is_fading.get() { "news-grid grid-fade-out" } else { "news-grid" }>
+                                         <div class=move || {
+                                             let fade_class = if is_fading.get() { " grid-fade-out" } else { "" };
+                                             match view_mode.get() {
+                                                 ViewMode::Card => format!("news-grid{}", fade_class),
+                                                 ViewMode::List => format!("news-list{}", fade_class),
+                                             }
+                                         }>
                                              {move || {
                                                  let current_p = current_page.get().min(total_pages).max(1);
                                                  let start_idx = (current_p - 1) * page_size;
@@ -684,7 +754,22 @@ fn Home() -> impl IntoView {
                                                      page_items.rotate_left(offset);
                                                  }
                                                  
-                                                 page_items.into_iter().enumerate().map(|(idx, item)| {
+                                                 let current_view = view_mode.get();
+                                                 let header = if current_view == ViewMode::List {
+                                                     view! {
+                                                         <div class="news-list-header">
+                                                             <span class="header-title">{move || if lang.get() == Language::En { "Title" } else { "শিরোনাম" }}</span>
+                                                             <span class="header-category">{move || if lang.get() == Language::En { "Category" } else { "বিভাগ" }}</span>
+                                                             <span class="header-source">{move || if lang.get() == Language::En { "Source" } else { "উৎস" }}</span>
+                                                             <span class="header-date">{move || if lang.get() == Language::En { "Date" } else { "তারিখ" }}</span>
+                                                             <span class="header-actions">{move || if lang.get() == Language::En { "Actions" } else { "পদক্ষেপ" }}</span>
+                                                         </div>
+                                                     }.into_view()
+                                                 } else {
+                                                     view! { <div /> }.into_view()
+                                                 };
+                                                 
+                                                 let rows = page_items.into_iter().enumerate().map(|(idx, item)| {
                                                      let current_lang = lang.get();
                                                      let item_id = item.id.clone();
                                                      let is_fav = item.is_favorite;
@@ -727,7 +812,7 @@ fn Home() -> impl IntoView {
                                                      let card_classes = if job_loss { 
                                                          if is_fading.get() { "news-card job-impact fading" } else { "news-card job-impact" } 
                                                      } else { 
-                                                         if is_fading.get() { "news-card fading" } else { "news-card" }
+                                                         if is_fading.get() { "news-card fading" } else { "news-card" } 
                                                      };
                                                      
                                                      let url_display = item.url.clone();
@@ -769,109 +854,125 @@ fn Home() -> impl IntoView {
                                                              }
                                                          });
                                                      };
-
-                                                     view! {
-                                                         <article class=card_classes style=format!("order: {}", idx)>
-                                                             <div class="card-meta">
-                                                                 <span class="source-badge">{source_display}</span>
-                                                                 {if job_loss {
-                                                                     view! {
-                                                                         <span class="job-impact-badge">
-                                                                             {move || localize(lang.get(), "job_impact_badge")}
-                                                                         </span>
-                                                                     }.into_view()
-                                                                 } else {
-                                                                     view! {
-                                                                         <span class=cat_class>{category_display.clone()}</span>
-                                                                     }.into_view()
-                                                                 }}
-                                                                 
-                                                                 <button 
-                                                                     class=move || if is_fav { "favorite-btn is-fav" } else { "favorite-btn" }
-                                                                     on:click=on_fav_toggle
-                                                                     title=if is_fav { "Remove from favorites" } else { "Save to favorites" }
-                                                                 >
-                                                                     <svg viewBox="0 0 24 24">
-                                                                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                                                                     </svg>
-                                                                 </button>
-                                                             </div>
-                                                             
-                                                             <div class="card-content">
-                                                                 <a class="card-title" href=url_display.clone() target="_blank" rel="noopener noreferrer">
-                                                                     {title_display}
-                                                                 </a>
-                                                                 <p class="card-summary">{summary_display}</p>
-                                                             </div>
-                                                             
-                                                             <div class="card-footer">
-                                                                 <span>{date_display}</span>
-                                                                 <a class="read-link" href=url_display target="_blank" rel="noopener noreferrer">
-                                                                     {move || localize(lang.get(), "read")}
-                                                                     <span class="arrow">" ->"</span>
-                                                                 </a>
-                                                             </div>
-                                                         </article>
+                                                     
+                                                     let on_fav_shared = std::rc::Rc::new(on_fav_toggle);
+                                                     let on_fav_1 = on_fav_shared.clone();
+                                                     let on_fav_2 = on_fav_shared.clone();
+                                                     
+                                                     let url_display_1 = url_display.clone();
+                                                     let url_display_2 = url_display.clone();
+                                                     let title_display_1 = title_display.clone();
+                                                     let title_display_2 = title_display.clone();
+                                                     let source_display_1 = source_display.clone();
+                                                     let source_display_2 = source_display.clone();
+                                                     let category_display_1 = category_display.clone();
+                                                     let category_display_2 = category_display.clone();
+                                                     let cat_class_1 = cat_class.clone();
+                                                     let cat_class_2 = cat_class.clone();
+                                                     let date_display_1 = date_display.clone();
+                                                     let date_display_2 = date_display.clone();
+                                                     
+                                                     match current_view {
+                                                         ViewMode::Card => {
+                                                             view! {
+                                                                 <article class=card_classes.clone() style=format!("order: {}", idx)>
+                                                                     <div class="card-meta">
+                                                                         <span class="source-badge">{source_display_1.clone()}</span>
+                                                                         {if job_loss {
+                                                                             view! {
+                                                                                 <span class="job-impact-badge">
+                                                                                     {move || localize(lang.get(), "job_impact_badge")}
+                                                                                 </span>
+                                                                             }.into_view()
+                                                                         } else {
+                                                                             view! {
+                                                                                 <span class=cat_class_1.clone()>{category_display_1.clone()}</span>
+                                                                             }.into_view()
+                                                                         }}
+                                                                         
+                                                                         <button 
+                                                                             class=move || if is_fav { "favorite-btn is-fav" } else { "favorite-btn" }
+                                                                             on:click=move |e| on_fav_1(e)
+                                                                             title=if is_fav { "Remove from favorites" } else { "Save to favorites" }
+                                                                         >
+                                                                             <svg viewBox="0 0 24 24">
+                                                                                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                                             </svg>
+                                                                         </button>
+                                                                     </div>
+                                                                     
+                                                                     <div class="card-content">
+                                                                         <a class="card-title" href=url_display_1.clone() target="_blank" rel="noopener noreferrer">
+                                                                             {title_display_1.clone()}
+                                                                         </a>
+                                                                         <p class="card-summary">{summary_display.clone()}</p>
+                                                                     </div>
+                                                                     
+                                                                     <div class="card-footer">
+                                                                         <span>{date_display_1.clone()}</span>
+                                                                         <a class="read-link" href=url_display_1 target="_blank" rel="noopener noreferrer">
+                                                                             {move || localize(lang.get(), "read")}
+                                                                             <span class="arrow">" ->"</span>
+                                                                         </a>
+                                                                     </div>
+                                                                 </article>
+                                                             }.into_view()
+                                                         }
+                                                         ViewMode::List => {
+                                                             view! {
+                                                                 <div class="news-list-row" style=format!("order: {}", idx)>
+                                                                     <div class="list-cell list-title">
+                                                                         <a href=url_display_2.clone() target="_blank" rel="noopener noreferrer">
+                                                                             {title_display_2.clone()}
+                                                                         </a>
+                                                                     </div>
+                                                                     <div class="list-cell list-category">
+                                                                         {if job_loss {
+                                                                             view! {
+                                                                                 <span class="job-impact-badge">
+                                                                                     {move || localize(lang.get(), "job_impact_badge")}
+                                                                                 </span>
+                                                                             }.into_view()
+                                                                         } else {
+                                                                             view! { <span class=cat_class_2.clone()>{category_display_2.clone()}</span> }.into_view()
+                                                                         }}
+                                                                     </div>
+                                                                     <div class="list-cell list-source">
+                                                                         <span class="source-badge">{source_display_2.clone()}</span>
+                                                                     </div>
+                                                                     <div class="list-cell list-date">
+                                                                         <span class="date-text">{date_display_2.clone()}</span>
+                                                                     </div>
+                                                                     <div class="list-cell list-actions">
+                                                                         <button 
+                                                                             class=move || if is_fav { "favorite-btn is-fav" } else { "favorite-btn" }
+                                                                             on:click=move |e| on_fav_2(e)
+                                                                             title=if is_fav { "Remove from favorites" } else { "Save to favorites" }
+                                                                         >
+                                                                             <svg viewBox="0 0 24 24">
+                                                                                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                                             </svg>
+                                                                         </button>
+                                                                         <a class="read-link-icon" href=url_display_2 target="_blank" rel="noopener noreferrer" title="Read Article">
+                                                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                                                                 <polyline points="15 3 21 3 21 9" />
+                                                                                 <line x1="10" y1="14" x2="21" y2="3" />
+                                                                             </svg>
+                                                                         </a>
+                                                                     </div>
+                                                                 </div>
+                                                             }.into_view()
+                                                         }
                                                      }
-                                                 }).collect::<Vec<_>>()
+                                                 }).collect::<Vec<_>>();
+                                                 
+                                                 view! {
+                                                     {header}
+                                                     {rows}
+                                                 }
                                              }}
                                          </div>
-
-                                         // Pagination Component
-                                         {move || {
-                                             if total_pages > 1 {
-                                                 view! {
-                                                     <div class="pagination-container">
-                                                         <button 
-                                                             class="pagination-btn"
-                                                             disabled=move || current_page.get().min(total_pages).max(1).le(&1)
-                                                             on:click=move |_| {
-                                                                 let p = current_page.get().min(total_pages).max(1);
-                                                                 if p > 1 {
-                                                                     set_current_page.set(p - 1);
-                                                                     if let Some(window) = web_sys::window() {
-                                                                         window.scroll_to_with_x_and_y(0.0, 400.0);
-                                                                     }
-                                                                 }
-                                                             }
-                                                         >
-                                                             {move || if lang.get() == Language::Bn { "পূর্ববর্তী" } else { "Previous" }}
-                                                         </button>
-                                                         
-                                                         <span class="pagination-info">
-                                                             {move || {
-                                                                 let current_p = current_page.get().min(total_pages).max(1);
-                                                                 let page_str = if lang.get() == Language::Bn { translate_digits(current_p as i64) } else { current_p.to_string() };
-                                                                 let total_str = if lang.get() == Language::Bn { translate_digits(total_pages as i64) } else { total_pages.to_string() };
-                                                                 if lang.get() == Language::Bn {
-                                                                     format!("পৃষ্ঠা {} এর {}", page_str, total_str)
-                                                                 } else {
-                                                                     format!("Page {} of {}", page_str, total_str)
-                                                                 }
-                                                             }}
-                                                         </span>
-                                                         
-                                                         <button 
-                                                             class="pagination-btn"
-                                                             disabled=move || current_page.get().min(total_pages).max(1).ge(&total_pages)
-                                                             on:click=move |_| {
-                                                                 let p = current_page.get().min(total_pages).max(1);
-                                                                 if p < total_pages {
-                                                                     set_current_page.set(p + 1);
-                                                                     if let Some(window) = web_sys::window() {
-                                                                         window.scroll_to_with_x_and_y(0.0, 400.0);
-                                                                     }
-                                                                 }
-                                                             }
-                                                         >
-                                                             {move || if lang.get() == Language::Bn { "পরবর্তী" } else { "Next" }}
-                                                         </button>
-                                                     </div>
-                                                 }.into_view()
-                                             } else {
-                                                 view! { <div /> }.into_view()
-                                             }
-                                         }}
                                      }.into_view()
                                 }
                             }

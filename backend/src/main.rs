@@ -423,6 +423,111 @@ async fn fetch_and_save_feeds(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::er
             continue;
         }
 
+        if feed.url == "https://www.etvbharat.com/en/!technology" {
+            // Scrape ETV Bharat Tech via Jina Reader
+            println!("Custom scanning ETV Bharat Tech via Jina Reader...");
+            let jina_client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(15))
+                .http1_only()
+                .build()?;
+            let target_url = "https://r.jina.ai/https://www.etvbharat.com/en/!technology";
+            match jina_client.get(target_url).send().await {
+                Ok(response) => {
+                    if !response.status().is_success() {
+                        eprintln!("HTTP error fetching ETV Bharat: {}", response.status());
+                        continue;
+                    }
+                    match response.text().await {
+                        Ok(text) => {
+                            let mut feed_added = 0;
+                            let lines: Vec<&str> = text.lines().collect();
+                            for i in 0..lines.len() {
+                                let line = lines[i];
+                                if line.starts_with('[') && !line.starts_with("[!") {
+                                    if let Some(close_bracket_idx) = line.find("](") {
+                                        let title_en = line[1..close_bracket_idx].trim().to_string();
+                                        let rest = &line[close_bracket_idx + 2..];
+                                        if let Some(close_paren_idx) = rest.find(')') {
+                                            let item_url = rest[..close_paren_idx].trim().to_string();
+                                            if item_url.starts_with("https://www.etvbharat.com/en/technology/") {
+                                                // Deduplicate
+                                                if db::article_exists(pool, &item_url).await.unwrap_or(false) {
+                                                    continue;
+                                                }
+
+                                                // Extract date if available (usually 2 lines down)
+                                                let mut published_at = chrono::Utc::now().timestamp();
+                                                if i + 2 < lines.len() {
+                                                    let date_str = lines[i+2].trim();
+                                                    if date_str.contains(" AM") || date_str.contains(" PM") {
+                                                        // E.g. "July 7, 2026 at 7:47 PM IST"
+                                                        let clean = date_str
+                                                            .replace(" at", "")
+                                                            .replace(" IST", "")
+                                                            .trim()
+                                                            .to_string();
+                                                        if let Ok(ndt) = chrono::NaiveDateTime::parse_from_str(&clean, "%B %e, %Y %I:%M %p") {
+                                                            published_at = ndt.and_utc().timestamp() - 19800; // Convert IST to UTC
+                                                        } else if let Ok(ndt) = chrono::NaiveDateTime::parse_from_str(&clean, "%B %d, %Y %I:%M %p") {
+                                                            published_at = ndt.and_utc().timestamp() - 19800;
+                                                        }
+                                                    }
+                                                }
+
+                                                // Filter by category
+                                                let category = match categorize_article(&title_en, "") {
+                                                    Some(c) => c,
+                                                    None => {
+                                                        println!("Skipping non-tech/AI article: {}", title_en);
+                                                        continue;
+                                                    }
+                                                };
+
+                                                // Translate title into Bengali
+                                                println!("Translating English headline: \"{}\"", title_en);
+                                                let title_bn = translate_text(&title_en, "bn").await;
+
+                                                let id = uuid::Uuid::new_v5(&uuid::Uuid::NAMESPACE_URL, item_url.as_bytes()).to_string();
+
+                                                let item = db::NewsItem {
+                                                    id,
+                                                    title_en,
+                                                    title_bn,
+                                                    url: item_url,
+                                                    source: "ETV Bharat".to_string(),
+                                                    summary_en: None,
+                                                    summary_bn: None,
+                                                    category: category.to_string(),
+                                                    published_at,
+                                                    created_at: chrono::Utc::now().timestamp(),
+                                                    is_favorite: false,
+                                                };
+
+                                                if let Err(e) = db::insert_news_item(pool, &item).await {
+                                                    eprintln!("Error saving ETV Bharat item: {:?}", e);
+                                                } else {
+                                                    feed_added += 1;
+                                                    total_added += 1;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            println!("Saved/updated {} items from {}.", feed_added, feed.name);
+                        }
+                        Err(e) => {
+                            eprintln!("Error reading body of ETV Bharat: {:?}", e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Network request failed for ETV Bharat: {:?}", e);
+                }
+            }
+            continue;
+        }
+
         println!("Scanning aggregated source: {} ({})", feed.name, feed.url);
         match client.get(feed.url).send().await {
             Ok(response) => {

@@ -766,7 +766,7 @@ fn Home() -> impl IntoView {
                                                          </div>
                                                      }.into_view()
                                                  } else {
-                                                     view! { <div /> }.into_view()
+                                                     ().into_view()
                                                  };
                                                  
                                                  let rows = page_items.into_iter().enumerate().map(|(idx, item)| {

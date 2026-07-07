@@ -283,11 +283,146 @@ async fn fetch_and_save_feeds(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::er
     let client = reqwest::Client::builder()
         .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
         .timeout(std::time::Duration::from_secs(12))
+        .http1_only()
         .build()?;
 
     let mut total_added = 0;
 
     for feed in feeds {
+        if feed.url == "https://layoffs.ai" {
+            // Handle custom layoffs.ai scraping via Jina Reader to bypass Cloudflare
+            println!("Custom scanning layoffs.ai via Jina Reader...");
+            let jina_client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(15))
+                .http1_only()
+                .build()?;
+            let target_url = "https://r.jina.ai/https://layoffs.ai";
+            match jina_client.get(target_url).send().await {
+                Ok(response) => {
+                    if !response.status().is_success() {
+                        eprintln!("HTTP error fetching layoffs.ai: {}", response.status());
+                        continue;
+                    }
+                    match response.text().await {
+                        Ok(text) => {
+                            let mut feed_added = 0;
+                            // Parse markdown lines
+                            for line in text.lines() {
+                                if line.starts_with("[![Image ") {
+                                    if let Some(last_bracket_idx) = line.rfind("](") {
+                                        let item_url = line[last_bracket_idx + 2..line.len() - 1].to_string();
+                                        if item_url.is_empty() {
+                                            continue;
+                                        }
+
+                                        // Deduplicate: skip if URL already exists
+                                        if db::article_exists(pool, &item_url).await.unwrap_or(false) {
+                                            continue;
+                                        }
+
+                                        let inner = &line[1..last_bracket_idx];
+                                        if let Some(img_start) = inner.find("![Image ") {
+                                            if let Some(colon_idx) = inner[img_start..].find(':') {
+                                                let absolute_colon = img_start + colon_idx;
+                                                if let Some(link_start) = inner[absolute_colon..].find("](") {
+                                                    let absolute_link_start = absolute_colon + link_start;
+                                                    let title_en = inner[absolute_colon + 1..absolute_link_start].trim().to_string();
+
+                                                    if let Some(img_url_end) = inner[absolute_link_start..].find(')') {
+                                                        let absolute_img_url_end = absolute_link_start + img_url_end;
+                                                        if let Some(hash_idx) = inner[absolute_img_url_end..].find(" ### ") {
+                                                            let absolute_hash_idx = absolute_img_url_end + hash_idx;
+                                                            let date_str = inner[absolute_img_url_end + 1..absolute_hash_idx].trim().to_string();
+
+                                                            let rest = &inner[absolute_hash_idx + 5..];
+                                                            let summary_raw = if rest.starts_with(&title_en) {
+                                                                rest[title_en.len()..].trim().to_string()
+                                                            } else {
+                                                                rest.trim().to_string()
+                                                            };
+                                                            let summary_en = if summary_raw.ends_with("Read more") {
+                                                                summary_raw[..summary_raw.len() - 9].trim().to_string()
+                                                            } else {
+                                                                summary_raw
+                                                            };
+
+                                                            // Parse published date
+                                                            let published_at = if let Ok(nd) = chrono::NaiveDate::parse_from_str(&date_str, "%b %e, %Y") {
+                                                                nd.and_hms_opt(12, 0, 0).unwrap().and_local_timezone(chrono::Utc).unwrap().timestamp()
+                                                            } else if let Ok(nd) = chrono::NaiveDate::parse_from_str(&date_str, "%B %e, %Y") {
+                                                                nd.and_hms_opt(12, 0, 0).unwrap().and_local_timezone(chrono::Utc).unwrap().timestamp()
+                                                            } else {
+                                                                chrono::Utc::now().timestamp()
+                                                            };
+
+                                                            // Translate title and summary into Bengali
+                                                            println!("Translating English headline: \"{}\"", title_en);
+                                                            let title_bn = translate_text(&title_en, "bn").await;
+
+                                                            let summary_bn = if summary_en.is_empty() {
+                                                                None
+                                                            } else {
+                                                                let translated = translate_text(&summary_en, "bn").await;
+                                                                if translated == summary_en {
+                                                                    None
+                                                                } else {
+                                                                    Some(translated)
+                                                                }
+                                                            };
+
+                                                            let category = match categorize_article(&title_en, &summary_en) {
+                                                                Some(c) => c,
+                                                                None => {
+                                                                    println!("Skipping non-tech/AI article: {}", title_en);
+                                                                    continue;
+                                                                }
+                                                            };
+
+                                                            // Generate deterministic UUID v5 from article URL
+                                                            let id = uuid::Uuid::new_v5(&uuid::Uuid::NAMESPACE_URL, item_url.as_bytes()).to_string();
+
+                                                            let item = db::NewsItem {
+                                                                id,
+                                                                title_en,
+                                                                title_bn,
+                                                                url: item_url,
+                                                                source: feed.name.to_string(),
+                                                                summary_en: if summary_en.is_empty() { None } else { Some(summary_en) },
+                                                                summary_bn,
+                                                                category: category.to_string(),
+                                                                published_at,
+                                                                created_at: chrono::Utc::now().timestamp(),
+                                                                is_favorite: false,
+                                                            };
+
+                                                            if let Err(e) = db::insert_news_item(pool, &item).await {
+                                                                eprintln!("Error saving layoffs.ai item: {:?}", e);
+                                                            } else {
+                                                                feed_added += 1;
+                                                                total_added += 1;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            println!("Saved/updated {} items from {}.", feed_added, feed.name);
+                        }
+                        Err(e) => {
+                            eprintln!("Error reading body of layoffs.ai: {:?}", e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Network request failed for layoffs.ai: {:?}", e);
+                }
+            }
+            continue;
+        }
+
         println!("Scanning aggregated source: {} ({})", feed.name, feed.url);
         match client.get(feed.url).send().await {
             Ok(response) => {
@@ -453,14 +588,22 @@ fn categorize_article(title: &str, summary: &str) -> Option<&'static str> {
     // Check Job Impact keywords first to prioritize it
     if text.contains("layoff")
         || text.contains("lay off")
+        || text.contains("lays off")
         || text.contains("laid off")
+        || text.contains("lay-off")
+        || text.contains("lay-offs")
         || text.contains("job loss")
         || text.contains("job cut")
+        || text.contains("job cuts")
         || text.contains("cut jobs")
+        || text.contains("cuts jobs")
         || text.contains("lose jobs")
         || text.contains("replace workers")
         || text.contains("worker replacement")
         || text.contains("reducing headcount")
+        || text.contains("headcount reduction")
+        || text.contains("workforce reduction")
+        || text.contains("reduction in force")
         || text.contains("unemployment")
         || text.contains("downsizing")
         || text.contains("job displacement")
@@ -468,6 +611,10 @@ fn categorize_article(title: &str, summary: &str) -> Option<&'static str> {
         || text.contains("new jobs")
         || text.contains("create jobs")
         || text.contains("job creation")
+        || (text.contains("cuts") && text.contains("jobs"))
+        || (text.contains("cut") && text.contains("jobs"))
+        || text.contains("restructuring")
+        || text.contains("redundanc")
     {
         return Some("Job Impact");
     }
@@ -485,7 +632,7 @@ fn categorize_article(title: &str, summary: &str) -> Option<&'static str> {
         || text.contains("openai")
         || text.contains("prompt engineering")
     {
-        return Some("LLMs & Generative AI");
+        return Some("LLMs & Gen AI");
     }
 
     if text.contains("robot")

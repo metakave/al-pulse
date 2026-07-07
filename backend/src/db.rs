@@ -60,6 +60,13 @@ pub async fn init_db(database_url: &str) -> Result<PgPool, sqlx::Error> {
     .execute(&pool)
     .await?;
 
+    // Migrate old category name 'LLMs & Generative AI' to 'LLMs & Gen AI'
+    sqlx::query(
+        "UPDATE news_items SET category = 'LLMs & Gen AI' WHERE category = 'LLMs & Generative' OR category = 'LLMs & Generative AI';"
+    )
+    .execute(&pool)
+    .await?;
+
     Ok(pool)
 }
 

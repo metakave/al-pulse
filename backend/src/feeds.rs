@@ -47,6 +47,10 @@ pub const FEEDS: &[NewsFeedSource] = &[
         url: "https://techcrunch.com/tag/layoffs/feed/",
     },
     NewsFeedSource {
+        name: "Layoffs.AI",
+        url: "https://layoffs.ai",
+    },
+    NewsFeedSource {
         name: "Wired",
         url: "https://www.wired.com/feed/tag/ai/latest/rss",
     },

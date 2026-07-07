@@ -105,7 +105,7 @@ fn translate_category(lang: Language, cat: &str) -> String {
         return cat.to_string();
     }
     match cat {
-        "LLMs & Generative AI" => "এলএলএম এবং জেনারেটিভ এআই".to_string(),
+        "LLMs & Gen AI" => "এলএলএম এবং জেন এআই".to_string(),
         "Robotics & Autonomous" => "রোবোটিক্স এবং স্বায়ত্তশাসিত".to_string(),
         "Industry & Tech Giants" => "শিল্প ও প্রযুক্তি জায়ান্ট".to_string(),
         "Research & Science" => "গবেষণা ও বিজ্ঞান".to_string(),
@@ -427,7 +427,7 @@ fn App() -> impl IntoView {
 
 fn category_to_slug(cat: &str) -> String {
     match cat {
-        "LLMs & Generative AI" => "llms-generative-ai".to_string(),
+        "LLMs & Gen AI" => "llms-gen-ai".to_string(),
         "Robotics & Autonomous" => "robotics-autonomous".to_string(),
         "Industry & Tech Giants" => "industry-tech-giants".to_string(),
         "Research & Science" => "research-science".to_string(),
@@ -439,7 +439,7 @@ fn category_to_slug(cat: &str) -> String {
 
 fn slug_to_category(slug: &str) -> String {
     match slug {
-        "llms-generative-ai" => "LLMs & Generative AI".to_string(),
+        "llms-gen-ai" => "LLMs & Gen AI".to_string(),
         "robotics-autonomous" => "Robotics & Autonomous".to_string(),
         "industry-tech-giants" => "Industry & Tech Giants".to_string(),
         "research-science" => "Research & Science".to_string(),
@@ -590,12 +590,12 @@ fn Home() -> impl IntoView {
         let current_lang = lang.get();
         vec![
             ("All".to_string(), translate_category(current_lang, "All")),
-            ("LLMs & Generative AI".to_string(), translate_category(current_lang, "LLMs & Generative AI")),
+            ("LLMs & Gen AI".to_string(), translate_category(current_lang, "LLMs & Gen AI")),
+            ("Job Impact".to_string(), translate_category(current_lang, "Job Impact")),
             ("Robotics & Autonomous".to_string(), translate_category(current_lang, "Robotics & Autonomous")),
             ("Industry & Tech Giants".to_string(), translate_category(current_lang, "Industry & Tech Giants")),
             ("Research & Science".to_string(), translate_category(current_lang, "Research & Science")),
             ("AI Ethics & Policy".to_string(), translate_category(current_lang, "AI Ethics & Policy")),
-            ("Job Impact".to_string(), translate_category(current_lang, "Job Impact")),
         ]
     };
 
@@ -700,7 +700,7 @@ fn Home() -> impl IntoView {
                                                      
                                                      let category_display = if current_lang == Language::En {
                                                          match item.category.as_str() {
-                                                             "LLMs & Generative AI" => "Gen AI",
+                                                             "LLMs & Gen AI" => "Gen AI",
                                                              "Robotics & Autonomous" => "Robotics",
                                                              "Industry & Tech Giants" => "Tech Giants",
                                                              "Research & Science" => "Research",
@@ -715,7 +715,7 @@ fn Home() -> impl IntoView {
                                                      let date_display = format_relative_time(current_lang, item.published_at);
                                                      
                                                      let cat_class = match item.category.as_str() {
-                                                         "LLMs & Generative AI" => "category-badge llm",
+                                                         "LLMs & Gen AI" => "category-badge llm",
                                                          "Robotics & Autonomous" => "category-badge robotics",
                                                          "Industry & Tech Giants" => "category-badge giants",
                                                          "Research & Science" => "category-badge research",

@@ -1352,7 +1352,7 @@ body {
 
 .news-list-header {
   display: grid;
-  grid-template-columns: 3fr 1.2fr 1.2fr 1.2fr 100px;
+  grid-template-columns: 3.6fr 1.2fr 1.2fr 1.2fr 100px;
   gap: 1.5rem;
   padding: 12px 20px;
   border-bottom: 2px solid var(--panel-border);
@@ -1371,7 +1371,7 @@ body {
 
 .news-list-row {
   display: grid;
-  grid-template-columns: 3fr 1.2fr 1.2fr 1.2fr 100px;
+  grid-template-columns: 3.6fr 1.2fr 1.2fr 1.2fr 100px;
   gap: 1.5rem;
   align-items: center;
   background: var(--panel-bg);

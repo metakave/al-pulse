@@ -422,6 +422,10 @@ fn App() -> impl IntoView {
                     <Route path="/about" view=|| view! { <AboutPage /> } />
                     <Route path="/changelog" view=|| view! { <ChangelogPage /> } />
                     <Route path="/sources" view=|| view! { <NewsSourcesPage /> } />
+                    <Route path="/archive" view=|| view! { <Home /> } />
+                    <Route path="/archive/:category" view=|| view! { <Home /> } />
+                    <Route path="/favorites" view=|| view! { <Home /> } />
+                    <Route path="/favorites/:category" view=|| view! { <Home /> } />
                     <Route path="/:category" view=|| view! { <Home /> } />
                     <Route path="*any" view=|| view! { "Page not found." } />
                 </Routes>
@@ -490,6 +494,21 @@ fn Home() -> impl IntoView {
     });
 
     let params = use_params_map();
+    let location = use_location();
+    let active_tab = expect_context::<ReadSignal<Tab>>();
+    let set_active_tab = expect_context::<WriteSignal<Tab>>();
+
+    create_effect(move |_| {
+        let path = location.pathname.get();
+        if path.starts_with("/archive") {
+            set_active_tab.set(Tab::Archive);
+        } else if path.starts_with("/favorites") {
+            set_active_tab.set(Tab::Favorites);
+        } else {
+            set_active_tab.set(Tab::Latest);
+        }
+    });
+
     let active_category = create_memo(move |_| {
         if let Some(slug) = params.get().get("category") {
             slug_to_category(slug)
@@ -497,8 +516,6 @@ fn Home() -> impl IntoView {
             "All".to_string()
         }
     });
-    let active_tab = expect_context::<ReadSignal<Tab>>();
-    let set_active_tab = expect_context::<WriteSignal<Tab>>();
     let (current_page, set_current_page) = create_signal(1usize);
     let (is_menu_open, set_is_menu_open) = create_signal(false);
 
@@ -652,8 +669,21 @@ fn Home() -> impl IntoView {
                         <div class="categories-list">
                             {move || categories().into_iter().map(|(id, display_name)| {
                                 let current_id = id.clone();
-                                let slug = category_to_slug(&current_id);
-                                let href = if slug.is_empty() { "/".to_string() } else { format!("/{}", slug) };
+                                let current_id_for_href = current_id.clone();
+                                let href = move || {
+                                    let slug = category_to_slug(&current_id_for_href);
+                                    match active_tab.get() {
+                                        Tab::Archive => {
+                                            if slug.is_empty() { "/archive".to_string() } else { format!("/archive/{}", slug) }
+                                        }
+                                        Tab::Favorites => {
+                                            if slug.is_empty() { "/favorites".to_string() } else { format!("/favorites/{}", slug) }
+                                        }
+                                        Tab::Latest => {
+                                            if slug.is_empty() { "/".to_string() } else { format!("/{}", slug) }
+                                        }
+                                    }
+                                };
                                 let is_active = move || active_category.get() == current_id;
                                 view! {
                                     <a 
@@ -731,7 +761,7 @@ fn Home() -> impl IntoView {
                                     }.into_view()
                                 } else {
                                      // 1. Pagination slice
-                                     let page_size = 48usize;
+                                     let page_size = 21usize;
                                      let total_items = items.len();
                                      let total_pages = (total_items + page_size - 1) / page_size;
                                      
@@ -973,6 +1003,53 @@ fn Home() -> impl IntoView {
                                                  }
                                              }}
                                          </div>
+
+                                         /* Pagination Controls */
+                                         {move || {
+                                             if total_pages > 1 {
+                                                 let current_p = current_page.get().min(total_pages).max(1);
+                                                 view! {
+                                                     <div class="pagination-controls">
+                                                         <button 
+                                                             class="pagination-btn"
+                                                             disabled=move || current_p <= 1
+                                                             on:click=move |_| {
+                                                                 set_current_page.update(|p| {
+                                                                     if *p > 1 { *p -= 1; }
+                                                                 });
+                                                             }
+                                                         >
+                                                             {move || if lang.get() == Language::En { "Previous" } else { "পূর্ববর্তী" }}
+                                                         </button>
+                                                         
+                                                         <span class="pagination-info">
+                                                             {move || {
+                                                                 let current_p_loc = current_page.get().min(total_pages).max(1);
+                                                                 if lang.get() == Language::En {
+                                                                     format!("Page {} of {}", current_p_loc, total_pages)
+                                                                 } else {
+                                                                     format!("পৃষ্ঠা {} এর {}", crate::translate_digits(current_p_loc as i64), crate::translate_digits(total_pages as i64))
+                                                                 }
+                                                             }}
+                                                         </span>
+
+                                                         <button 
+                                                             class="pagination-btn"
+                                                             disabled=move || current_p >= total_pages
+                                                             on:click=move |_| {
+                                                                 set_current_page.update(|p| {
+                                                                     if *p < total_pages { *p += 1; }
+                                                                 });
+                                                             }
+                                                         >
+                                                             {move || if lang.get() == Language::En { "Next" } else { "পরবর্তী" }}
+                                                         </button>
+                                                     </div>
+                                                 }.into_view()
+                                             } else {
+                                                 ().into_view()
+                                             }
+                                         }}
                                      }.into_view()
                                 }
                             }

@@ -128,9 +128,9 @@ async fn get_news(
 ) -> impl IntoResponse {
     let favorites_only = params.favorites.unwrap_or(false);
     let show_archived = params.archive.unwrap_or(false);
-    let five_days_ago = chrono::Utc::now().timestamp() - 5 * 24 * 60 * 60;
+    let ten_days_ago = chrono::Utc::now().timestamp() - 10 * 24 * 60 * 60;
 
-    match db::get_news_items(&state.pool, params.q, params.category, favorites_only, show_archived, five_days_ago).await {
+    match db::get_news_items(&state.pool, params.q, params.category, favorites_only, show_archived, ten_days_ago).await {
         Ok(items) => Json(items).into_response(),
         Err(e) => {
             eprintln!("Database error in get_news: {:?}", e);

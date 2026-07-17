@@ -205,6 +205,10 @@ pub const FEEDS: &[NewsFeedSource] = &[
         url: "https://news.google.com/rss/search?q=AI+Jobs&hl=en-US&gl=US&ceid=US:en",
     },
     NewsFeedSource {
+        name: "Google News (Futurism AI/Jobs)",
+        url: "https://news.google.com/rss/search?q=site:futurism.com+AND+(%22artificial+intelligence%22+OR+AI)+AND+(job+OR+jobs)&hl=en-US&gl=US&ceid=US:en",
+    },
+    NewsFeedSource {
         name: "ETV Bharat Technology",
         url: "https://www.etvbharat.com/en/!technology",
     },

@@ -216,6 +216,10 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "MIT Sloan Management Review ME",
         url: "https://www.mitsloanme.com/topics/data-ai-machine-learning/",
     },
+    NewsFeedSource {
+        name: "MarketWatch (AI/Jobs)",
+        url: "https://news.google.com/rss/search?q=site:marketwatch.com+AND+(%22artificial+intelligence%22+OR+AI)+AND+(job+OR+jobs)&hl=en-US&gl=US&ceid=US:en",
+    },
 ];
 
 

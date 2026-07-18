@@ -350,6 +350,7 @@ fn NewsSourcesPage() -> impl IntoView {
                     <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"Bloomberg Professional Insights"</strong>": "<a href="https://www.bloomberg.com/professional/insights/category/artificial-intelligence" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.bloomberg.com/professional/insights/category/artificial-intelligence"</a></li>
                     <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"BBC News AI"</strong>": "<a href="https://www.bbc.com/news/topics/ce1qrvleleqt" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.bbc.com/news/topics/ce1qrvleleqt"</a></li>
                     <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"The Information"</strong>": "<a href="https://www.theinformation.com/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.theinformation.com/"</a></li>
+                    <li style="padding: 1rem; background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: var(--border-radius-md);"><strong>"MIT Sloan Management Review ME"</strong>": "<a href="https://www.mitsloanme.com/topics/data-ai-machine-learning/" target="_blank" style="color: var(--accent-cyan); word-break: break-all;">"https://www.mitsloanme.com/topics/data-ai-machine-learning/"</a></li>
                 </ul>
                 <a href="/" class="about-back-btn" style="margin-top: 2rem;">
                     "← Back to Feed"
@@ -1007,12 +1008,11 @@ fn Home() -> impl IntoView {
                                          /* Pagination Controls */
                                          {move || {
                                              if total_pages > 1 {
-                                                 let current_p = current_page.get().min(total_pages).max(1);
                                                  view! {
                                                      <div class="pagination-controls">
                                                          <button 
                                                              class="pagination-btn"
-                                                             disabled=move || current_p <= 1
+                                                             disabled=move || current_page.get() <= 1
                                                              on:click=move |_| {
                                                                  set_current_page.update(|p| {
                                                                      if *p > 1 { *p -= 1; }
@@ -1035,7 +1035,7 @@ fn Home() -> impl IntoView {
 
                                                          <button 
                                                              class="pagination-btn"
-                                                             disabled=move || current_p >= total_pages
+                                                             disabled=move || current_page.get() >= total_pages
                                                              on:click=move |_| {
                                                                  set_current_page.update(|p| {
                                                                      if *p < total_pages { *p += 1; }

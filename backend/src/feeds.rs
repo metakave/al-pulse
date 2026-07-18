@@ -212,5 +212,10 @@ pub const FEEDS: &[NewsFeedSource] = &[
         name: "ETV Bharat Technology",
         url: "https://www.etvbharat.com/en/!technology",
     },
+    NewsFeedSource {
+        name: "MIT Sloan Management Review ME",
+        url: "https://www.mitsloanme.com/topics/data-ai-machine-learning/",
+    },
 ];
+
 

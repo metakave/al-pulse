@@ -528,6 +528,125 @@ async fn fetch_and_save_feeds(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::er
             continue;
         }
 
+        if feed.url == "https://www.mitsloanme.com/topics/data-ai-machine-learning/" {
+            println!("Custom scanning MIT Sloan ME via Jina Reader...");
+            let jina_client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(15))
+                .http1_only()
+                .build()?;
+            let target_url = "https://r.jina.ai/https://www.mitsloanme.com/topics/data-ai-machine-learning/";
+            match jina_client.get(target_url).send().await {
+                Ok(response) => {
+                    if !response.status().is_success() {
+                        eprintln!("HTTP error fetching MIT Sloan ME: {}", response.status());
+                        continue;
+                    }
+                    match response.text().await {
+                        Ok(text) => {
+                            let mut feed_added = 0;
+                            let lines: Vec<&str> = text.lines().collect();
+                            for i in 0..lines.len() {
+                                let line = lines[i];
+                                if line.starts_with("### [") {
+                                    if let Some(close_bracket_idx) = line.find("](") {
+                                        let title_en = line[5..close_bracket_idx].trim().to_string();
+                                        let rest = &line[close_bracket_idx + 2..];
+                                        if let Some(close_paren_idx) = rest.find(')') {
+                                            let item_url = rest[..close_paren_idx].trim().to_string();
+                                            
+                                            // Deduplicate
+                                            if db::article_exists(pool, &item_url).await.unwrap_or(false) {
+                                                continue;
+                                            }
+
+                                            let mut summary_en = String::new();
+                                            let mut published_at = chrono::Utc::now().timestamp();
+                                            let mut found_desc = false;
+                                            
+                                            for offset in 1..8 {
+                                                if i + offset >= lines.len() {
+                                                    break;
+                                                }
+                                                let next_line = lines[i + offset].trim();
+                                                if next_line.is_empty() {
+                                                    continue;
+                                                }
+                                                if next_line.starts_with('#') || next_line.starts_with("[![Image") {
+                                                    break;
+                                                }
+                                                if next_line.starts_with("#####") {
+                                                    continue;
+                                                }
+                                                if next_line.contains("ago") || next_line.contains("yesterday") {
+                                                    published_at = parse_relative_time(next_line);
+                                                } else if !found_desc {
+                                                    summary_en = next_line.to_string();
+                                                    found_desc = true;
+                                                }
+                                            }
+
+                                            let category = match categorize_article(&title_en, &summary_en) {
+                                                Some(c) => c,
+                                                None => {
+                                                    println!("Skipping non-tech/AI article: {}", title_en);
+                                                    continue;
+                                                }
+                                            };
+
+                                            println!("Translating English headline: \"{}\"", title_en);
+                                            let title_bn = translate_text(&title_en, "bn").await;
+                                            
+                                            let summary_bn = if summary_en.is_empty() {
+                                                None
+                                            } else {
+                                                let translated = translate_text(&summary_en, "bn").await;
+                                                if translated == summary_en {
+                                                    None
+                                                } else {
+                                                    Some(translated)
+                                                }
+                                            };
+
+                                            let id = uuid::Uuid::new_v5(&uuid::Uuid::NAMESPACE_URL, item_url.as_bytes()).to_string();
+
+                                            let item = db::NewsItem {
+                                                id,
+                                                title_en,
+                                                title_bn,
+                                                url: item_url,
+                                                source: "MIT Sloan Management Review ME".to_string(),
+                                                summary_en: if summary_en.is_empty() { None } else { Some(summary_en) },
+                                                summary_bn,
+                                                category: category.to_string(),
+                                                published_at,
+                                                created_at: chrono::Utc::now().timestamp(),
+                                                is_favorite: false,
+                                            };
+
+                                            if let Err(e) = db::insert_news_item(pool, &item).await {
+                                                eprintln!("Error saving MIT Sloan ME item: {:?}", e);
+                                            } else {
+                                                feed_added += 1;
+                                                total_added += 1;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            println!("Saved/updated {} items from {}.", feed_added, feed.name);
+                        }
+                        Err(e) => {
+                            eprintln!("Error reading body of MIT Sloan ME: {:?}", e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Network request failed for MIT Sloan ME: {:?}", e);
+                }
+            }
+            continue;
+        }
+
         println!("Scanning aggregated source: {} ({})", feed.name, feed.url);
         match client.get(feed.url).send().await {
             Ok(response) => {
@@ -683,7 +802,7 @@ fn categorize_article(title: &str, summary: &str) -> Option<&'static str> {
         || text.contains("promo code")
         || text.contains("gift guide")
         || text.contains("archaeolog")
-        || text.contains("history")
+        || (text.contains("history") && !text.contains("browser history") && !text.contains("search history") && !text.contains("chat history"))
         || text.contains("entertainment")
         || text.contains("quiz")
     {
@@ -720,6 +839,13 @@ fn categorize_article(title: &str, summary: &str) -> Option<&'static str> {
         || (text.contains("cut") && text.contains("jobs"))
         || text.contains("restructuring")
         || text.contains("redundanc")
+        || text.contains("job vacancy")
+        || text.contains("job vacancies")
+        || text.contains("hiring trends")
+        || text.contains("employment")
+        || text.contains("labor market")
+        || text.contains("workforce")
+        || text.contains("hiring")
     {
         return Some("Job Impact");
     }
@@ -842,4 +968,38 @@ fn strip_html(html: &str) -> String {
         .replace("  ", " ")
         .trim()
         .to_string()
+}
+
+fn parse_relative_time(text: &str) -> i64 {
+    let text_lower = text.to_lowercase();
+    let current_time = chrono::Utc::now().timestamp();
+    
+    if text_lower.contains("yesterday") || text_lower.contains("a day ago") {
+        return current_time - 24 * 3600;
+    }
+    
+    let parts: Vec<&str> = text_lower.split_whitespace().collect();
+    if parts.len() >= 3 {
+        if let Ok(num) = parts[0].parse::<i64>() {
+            let unit = parts[1];
+            if unit.starts_with("hour") {
+                return current_time - num * 3600;
+            } else if unit.starts_with("day") {
+                return current_time - num * 24 * 3600;
+            } else if unit.starts_with("week") {
+                return current_time - num * 7 * 24 * 3600;
+            } else if unit.starts_with("minute") {
+                return current_time - num * 60;
+            }
+        }
+    }
+    
+    if text_lower.contains("a week ago") {
+        return current_time - 7 * 24 * 3600;
+    }
+    if text_lower.contains("a hour ago") || text_lower.contains("an hour ago") {
+        return current_time - 3600;
+    }
+
+    current_time
 }

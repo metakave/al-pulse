@@ -16,3 +16,6 @@ ai_news.db-wal
 
 # OS files
 .DS_Store
+
+# Scraped spreadsheet exports
+*.xlsx

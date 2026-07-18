@@ -1012,7 +1012,7 @@ fn Home() -> impl IntoView {
                                                      <div class="pagination-controls">
                                                          <button 
                                                              class="pagination-btn"
-                                                             disabled=move || current_page.get() <= 1
+                                                             disabled={move || current_page.get() <= 1}
                                                              on:click=move |_| {
                                                                  set_current_page.update(|p| {
                                                                      if *p > 1 { *p -= 1; }
@@ -1035,7 +1035,7 @@ fn Home() -> impl IntoView {
 
                                                          <button 
                                                              class="pagination-btn"
-                                                             disabled=move || current_page.get() >= total_pages
+                                                             disabled={move || current_page.get() >= total_pages}
                                                              on:click=move |_| {
                                                                  set_current_page.update(|p| {
                                                                      if *p < total_pages { *p += 1; }

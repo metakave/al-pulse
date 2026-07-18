@@ -109,6 +109,7 @@ pub async fn get_news_items(
     favorites_only: bool,
     show_archived: bool,
     five_days_ago: i64,
+    limit: Option<i64>,
 ) -> Result<Vec<NewsItem>, sqlx::Error> {
     // Construct search term with SQL wildcards if present
     let search_param = q.map(|s| format!("%{}%", s));
@@ -127,15 +128,16 @@ pub async fn get_news_items(
                 OR source ILIKE $1)
            AND ($2::text IS NULL OR category = $2)
            AND ($3 = FALSE OR is_favorite = TRUE)
-           AND ($3 = TRUE OR ($4 = FALSE AND published_at >= $5) OR ($4 = TRUE AND published_at < $5))
+           AND ($3 = TRUE OR $4 = TRUE OR published_at >= $5)
          ORDER BY published_at DESC
-         LIMIT 100"
+         LIMIT $6"
     )
     .bind(search_param)
     .bind(category)
     .bind(favorites_only)
     .bind(show_archived)
     .bind(five_days_ago)
+    .bind(limit)
     .fetch_all(pool)
     .await?;
 

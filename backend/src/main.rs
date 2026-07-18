@@ -37,7 +37,7 @@ async fn main() {
     let pool = db::init_db(&database_url).await.expect("Failed to initialize database");
 
     // Pre-populate database on start if it's empty so the user doesn't see a blank page
-    match db::get_news_items(&pool, None, None, false, false, 0).await {
+    match db::get_news_items(&pool, None, None, false, false, 0, Some(1)).await {
         Ok(items) => {
             if items.is_empty() {
                 println!("Database is empty. Running initial news synchronization...");
@@ -130,7 +130,8 @@ async fn get_news(
     let show_archived = params.archive.unwrap_or(false);
     let ten_days_ago = chrono::Utc::now().timestamp() - 10 * 24 * 60 * 60;
 
-    match db::get_news_items(&state.pool, params.q, params.category, favorites_only, show_archived, ten_days_ago).await {
+    let limit = if show_archived { None } else { Some(100) };
+    match db::get_news_items(&state.pool, params.q, params.category, favorites_only, show_archived, ten_days_ago, limit).await {
         Ok(items) => Json(items).into_response(),
         Err(e) => {
             eprintln!("Database error in get_news: {:?}", e);

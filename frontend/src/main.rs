@@ -58,6 +58,19 @@ enum Tab {
     Favorites,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum SortColumn {
+    Title,
+    Date,
+    Source,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum SortOrder {
+    Asc,
+    Desc,
+}
+
 // UI Localization Dictionary
 fn localize(lang: Language, key: &str) -> &'static str {
     match lang {
@@ -531,6 +544,8 @@ fn Home() -> impl IntoView {
     });
     let (current_page, set_current_page) = create_signal(1usize);
     let (is_menu_open, set_is_menu_open) = create_signal(false);
+    let (sort_col, set_sort_col) = create_signal(SortColumn::Date);
+    let (sort_order, set_sort_order) = create_signal(SortOrder::Desc);
 
     create_effect(move |_| {
         // Track the inputs so we reset the page whenever they change
@@ -775,7 +790,23 @@ fn Home() -> impl IntoView {
                                 } else {
                                      // 1. Pagination slice
                                      let page_size = 21usize;
-                                     let total_items = items.len();
+                                     let mut sorted_items = items.clone();
+                                     let current_col = sort_col.get();
+                                     let current_order = sort_order.get();
+                                     sorted_items.sort_by(|a, b| {
+                                         let cmp = match current_col {
+                                             SortColumn::Title => a.title_en.cmp(&b.title_en),
+                                             SortColumn::Date => a.published_at.cmp(&b.published_at),
+                                             SortColumn::Source => a.source.cmp(&b.source),
+                                         };
+                                         if current_order == SortOrder::Desc {
+                                             cmp.reverse()
+                                         } else {
+                                             cmp
+                                         }
+                                     });
+                                     
+                                     let total_items = sorted_items.len();
                                      let total_pages = (total_items + page_size - 1) / page_size;
                                      
                                      view! {
@@ -789,7 +820,7 @@ fn Home() -> impl IntoView {
                                              {move || {
                                                  let current_p = current_page.get().min(total_pages).max(1);
                                                  let start_idx = (current_p - 1) * page_size;
-                                                 let mut page_items = items.clone().into_iter().skip(start_idx).take(page_size).collect::<Vec<_>>();
+                                                 let mut page_items = sorted_items.clone().into_iter().skip(start_idx).take(page_size).collect::<Vec<_>>();
                                                  
                                                  let page_len = page_items.len();
                                                  if page_len > 0 {
@@ -799,12 +830,38 @@ fn Home() -> impl IntoView {
                                                  
                                                  let current_view = view_mode.get();
                                                  let header = if current_view == ViewMode::List {
+                                                     let toggle_sort = move |col: SortColumn| {
+                                                         if sort_col.get() == col {
+                                                             set_sort_order.update(|o| *o = if *o == SortOrder::Asc { SortOrder::Desc } else { SortOrder::Asc });
+                                                         } else {
+                                                             set_sort_col.set(col);
+                                                             set_sort_order.set(if col == SortColumn::Date { SortOrder::Desc } else { SortOrder::Asc });
+                                                         }
+                                                     };
+                                                     let on_click_title = { let toggle = toggle_sort.clone(); move |_| toggle(SortColumn::Title) };
+                                                     let on_click_source = { let toggle = toggle_sort.clone(); move |_| toggle(SortColumn::Source) };
+                                                     let on_click_date = { let toggle = toggle_sort.clone(); move |_| toggle(SortColumn::Date) };
+                                                     
+                                                     let render_sort_icon = move |col: SortColumn| {
+                                                         if sort_col.get() == col {
+                                                             if sort_order.get() == SortOrder::Asc { " ↑" } else { " ↓" }
+                                                         } else { "" }
+                                                     };
                                                      view! {
                                                          <div class="news-list-header">
-                                                             <span class="header-title">{move || if lang.get() == Language::En { "Title" } else { "শিরোনাম" }}</span>
+                                                             <span class="header-title sortable" on:click=on_click_title style="cursor:pointer;">
+                                                                 {move || if lang.get() == Language::En { "Title" } else { "শিরোনাম" }}
+                                                                 {move || render_sort_icon(SortColumn::Title)}
+                                                             </span>
                                                              <span class="header-category">{move || if lang.get() == Language::En { "Category" } else { "বিভাগ" }}</span>
-                                                             <span class="header-source">{move || if lang.get() == Language::En { "Source" } else { "উৎস" }}</span>
-                                                             <span class="header-date">{move || if lang.get() == Language::En { "Date" } else { "তারিখ" }}</span>
+                                                             <span class="header-source sortable" on:click=on_click_source style="cursor:pointer;">
+                                                                 {move || if lang.get() == Language::En { "Source" } else { "উৎস" }}
+                                                                 {move || render_sort_icon(SortColumn::Source)}
+                                                             </span>
+                                                             <span class="header-date sortable" on:click=on_click_date style="cursor:pointer;">
+                                                                 {move || if lang.get() == Language::En { "Date" } else { "তারিখ" }}
+                                                                 {move || render_sort_icon(SortColumn::Date)}
+                                                             </span>
                                                              <span class="header-actions">{move || if lang.get() == Language::En { "Actions" } else { "পদক্ষেপ" }}</span>
                                                          </div>
                                                      }.into_view()

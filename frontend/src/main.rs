@@ -269,6 +269,18 @@ fn ChangelogPage() -> impl IntoView {
                     <div class="changelog-item">
                         <div class="changelog-dot"></div>
                         <div class="changelog-content">
+                            <div class="changelog-version">"AI PulseQ version 1.0.2"</div>
+                            <div class="changelog-date">"July 2026"</div>
+                            <ul class="changelog-list">
+                                <li>"Improved Pagination"</li>
+                                <li>"Improved Archiving"</li>
+                                <li>"Adding new News Sources"</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="changelog-item">
+                        <div class="changelog-dot"></div>
+                        <div class="changelog-content">
                             <div class="changelog-version">"AI PulseQ version 1.0.1"</div>
                             <div class="changelog-date">"June 2026"</div>
                             <ul class="changelog-list">
@@ -645,7 +657,7 @@ fn Home() -> impl IntoView {
     };
 
     view! {
-        <Title text=move || format!("{} News - AI PulseQ", active_category.get()) />
+        <Title text="AIPulseQ - AI News Update - Curated Intelligence" />
         <Meta name="description" content=move || format!("AI PulseQ: Latest curated news and insights about {} in the AI world.", active_category.get()) />
         <div class="container">
 

@@ -808,15 +808,23 @@ fn Home() -> impl IntoView {
                                      
                                      let total_items = sorted_items.len();
                                      let total_pages = (total_items + page_size - 1) / page_size;
-                                     
-                                     view! {
-                                         <div class=move || {
-                                             let fade_class = if is_fading.get() { " grid-fade-out" } else { "" };
-                                             match view_mode.get() {
-                                                 ViewMode::Card => format!("news-masonry-grid{}", fade_class),
-                                                 ViewMode::List => format!("news-list{}", fade_class),
-                                             }
-                                         }>
+                                      let is_youtube_home = active_category.get() == "All" && active_tab.get() == Tab::Latest;
+                                      
+                                      view! {
+                                          <div class=move || {
+                                              let fade_class = if is_fading.get() { " grid-fade-out" } else { "" };
+                                              if is_youtube_home {
+                                                  match view_mode.get() {
+                                                      ViewMode::Card => format!("news-masonry-grid{}", fade_class),
+                                                      ViewMode::List => format!("news-list{}", fade_class),
+                                                  }
+                                              } else {
+                                                  match view_mode.get() {
+                                                      ViewMode::Card => format!("news-grid{}", fade_class),
+                                                      ViewMode::List => format!("news-list{}", fade_class),
+                                                  }
+                                              }
+                                          }>
                                              {move || {
                                                  let current_p = current_page.get().min(total_pages).max(1);
                                                  let start_idx = (current_p - 1) * page_size;
@@ -862,87 +870,223 @@ fn Home() -> impl IntoView {
                                                  };
                                                  
                                                  let rows = page_items.into_iter().enumerate().map(|(idx, item)| {
-                                                     let current_lang = lang.get();
-                                                     let _item_id = item.id.clone();
-                                                     let _is_fav = item.is_favorite;
-                                                     let title_display = if current_lang == Language::Bn { item.title_bn.clone() } else { item.title_en.clone() };
-                                                     let source_display = translate_source(current_lang, &item.source);
-                                                     let date_display = format_relative_time(current_lang, item.published_at);
-                                                     let url_display = item.url.clone();
-                                                     let embed_url = get_youtube_embed_url(&url_display);
+                                                      let current_lang = lang.get();
+                                                      let item_id = item.id.clone();
+                                                      let is_fav = item.is_favorite;
+                                                      let job_loss = is_job_displacement(&item.title_en, &item.summary_en.clone().unwrap_or_default());
+                                                      
+                                                      let title_display = if current_lang == Language::Bn { item.title_bn.clone() } else { item.title_en.clone() };
+                                                      let summary_display = if current_lang == Language::Bn { 
+                                                          item.summary_bn.clone().unwrap_or_default() 
+                                                      } else { 
+                                                          item.summary_en.clone().unwrap_or_default() 
+                                                      };
+                                                      let category_display = translate_category(current_lang, &item.category);
+                                                      let source_display = translate_source(current_lang, &item.source);
+                                                      let date_display = format_relative_time(current_lang, item.published_at);
+                                                      let url_display = item.url.clone();
+                                                      let embed_url = get_youtube_embed_url(&url_display);
 
-                                                     let item_id = item.id.clone();
-                                                     let is_fav = item.is_favorite;
-                                                     let on_toggle_fav = move |_: web_sys::MouseEvent| {
-                                                         let next_fav = !is_fav;
-                                                         let id_param = item_id.clone();
-                                                         spawn_local(async move {
-                                                             let payload = serde_json::json!({ "is_favorite": next_fav });
-                                                             let url = format!("/api/news/{}/favorite", id_param);
-                                                             let _ = Request::post(&url)
-                                                                 .header("Content-Type", "application/json")
-                                                                 .json(&payload);
-                                                         });
-                                                     };
-                                                     
-                                                     let url_display_1 = url_display.clone();
-                                                     let url_display_2 = url_display.clone();
-                                                     let title_display_1 = title_display.clone();
-                                                     let title_display_2 = title_display.clone();
-                                                     
-                                                     match current_view {
-                                                         ViewMode::Card => {
-                                                             let card_size_class = match idx % 5 {
-                                                                 0 => "masonry-card masonry-card-large",
-                                                                 1 | 3 => "masonry-card masonry-card-medium",
-                                                                 _ => "masonry-card masonry-card-small",
-                                                             };
-                                                             view! {
-                                                                 <article class=card_size_class>
-                                                                     <div class="video-embed-container">
-                                                                         <iframe 
-                                                                             src=embed_url.clone()
-                                                                             title=title_display_1.clone()
-                                                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                                             allowfullscreen="true"
-                                                                             loading="lazy"
-                                                                         ></iframe>
-                                                                     </div>
-                                                                     <a class="masonry-card-title" href=url_display_1 target="_blank" rel="noopener noreferrer">
-                                                                         {title_display_1}
-                                                                     </a>
-                                                                 </article>
-                                                             }.into_view()
-                                                         }
-                                                         ViewMode::List => {
-                                                             view! {
-                                                                 <div class="news-list-row" style=format!("order: {}", idx)>
-                                                                     <div class="list-cell list-title">
-                                                                         <a href=url_display_2.clone() target="_blank" rel="noopener noreferrer">
-                                                                             {title_display_2.clone()}
-                                                                         </a>
-                                                                     </div>
-                                                                     <div class="list-cell list-category">
-                                                                         <span class="source-badge">"YouTube"</span>
-                                                                     </div>
-                                                                     <div class="list-cell list-source">
-                                                                         <span class="source-badge">{source_display.clone()}</span>
-                                                                     </div>
-                                                                     <div class="list-cell list-date">
-                                                                         <span class="date-text">{date_display.clone()}</span>
-                                                                     </div>
-                                                                     <div class="list-cell list-actions">
-                                                                         <a class="read-link-icon" href=url_display_2 target="_blank" rel="noopener noreferrer" title="Watch Video">
-                                                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                                                 <polygon points="5 3 19 12 5 21 5 3" />
-                                                                             </svg>
-                                                                         </a>
-                                                                     </div>
-                                                                 </div>
-                                                             }.into_view()
-                                                         }
-                                                     }
-                                                 }).collect::<Vec<_>>();
+                                                      let cat_class = match item.category.as_str() {
+                                                          "LLMs & Gen AI" => "category-badge llm",
+                                                          "Robotics & Autonomous" => "category-badge robotics",
+                                                          "Industry & Tech Giants" => "category-badge giants",
+                                                          "Research & Science" => "category-badge research",
+                                                          "AI Ethics & Policy" => "category-badge ethics",
+                                                          "Job Impact" => "category-badge job-impact",
+                                                          _ => "category-badge",
+                                                      };
+
+                                                      let card_classes = if job_loss { 
+                                                          if is_fading.get() { "news-card job-impact fading" } else { "news-card job-impact" } 
+                                                      } else { 
+                                                          if is_fading.get() { "news-card fading" } else { "news-card" } 
+                                                      };
+
+                                                      let on_fav_toggle = move |e: web_sys::MouseEvent| {
+                                                          e.stop_propagation();
+                                                          let next_fav = !is_fav;
+                                                          let id_for_update = item_id.clone();
+                                                          news_resource.update(move |data| {
+                                                              if let Some(Ok(ref mut list)) = data {
+                                                                  if let Some(target) = list.iter_mut().find(|i| i.id == id_for_update) {
+                                                                      target.is_favorite = next_fav;
+                                                                  }
+                                                              }
+                                                          });
+
+                                                          let id_param = item_id.clone();
+                                                          spawn_local(async move {
+                                                              let payload = serde_json::json!({ "is_favorite": next_fav });
+                                                              let url = format!("/api/news/{}/favorite", id_param);
+                                                              let _ = Request::post(&url)
+                                                                  .header("Content-Type", "application/json")
+                                                                  .json(&payload);
+                                                          });
+                                                      };
+
+                                                      let url_display_1 = url_display.clone();
+                                                      let url_display_2 = url_display.clone();
+                                                      let title_display_1 = title_display.clone();
+                                                      let title_display_2 = title_display.clone();
+                                                      let source_display_1 = source_display.clone();
+                                                      let source_display_2 = source_display.clone();
+                                                      let category_display_1 = category_display.clone();
+                                                      let category_display_2 = category_display.clone();
+                                                      let cat_class_1 = cat_class.to_string();
+                                                      let cat_class_2 = cat_class.to_string();
+                                                      let date_display_1 = date_display.clone();
+                                                      let date_display_2 = date_display.clone();
+
+                                                      if is_youtube_home {
+                                                          match current_view {
+                                                              ViewMode::Card => {
+                                                                  let card_size_class = match idx % 5 {
+                                                                      0 => "masonry-card masonry-card-large",
+                                                                      1 | 3 => "masonry-card masonry-card-medium",
+                                                                      _ => "masonry-card masonry-card-small",
+                                                                  };
+                                                                  view! {
+                                                                      <article class=card_size_class>
+                                                                          <div class="video-embed-container">
+                                                                              <iframe 
+                                                                                  src=embed_url.clone()
+                                                                                  title=title_display_1.clone()
+                                                                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                                  allowfullscreen="true"
+                                                                                  loading="lazy"
+                                                                              ></iframe>
+                                                                          </div>
+                                                                          <a class="masonry-card-title" href=url_display_1 target="_blank" rel="noopener noreferrer">
+                                                                              {title_display_1}
+                                                                          </a>
+                                                                      </article>
+                                                                  }.into_view()
+                                                              }
+                                                              ViewMode::List => {
+                                                                  view! {
+                                                                      <div class="news-list-row" style=format!("order: {}", idx)>
+                                                                          <div class="list-cell list-title">
+                                                                              <a href=url_display_2.clone() target="_blank" rel="noopener noreferrer">
+                                                                                  {title_display_2}
+                                                                              </a>
+                                                                          </div>
+                                                                          <div class="list-cell list-category">
+                                                                              <span class="source-badge">"YouTube"</span>
+                                                                          </div>
+                                                                          <div class="list-cell list-source">
+                                                                              <span class="source-badge">{source_display_2}</span>
+                                                                          </div>
+                                                                          <div class="list-cell list-date">
+                                                                              <span class="date-text">{date_display_2}</span>
+                                                                          </div>
+                                                                          <div class="list-cell list-actions">
+                                                                              <a class="read-link-icon" href=url_display_2 target="_blank" rel="noopener noreferrer" title="Watch Video">
+                                                                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                                      <polygon points="5 3 19 12 5 21 5 3" />
+                                                                                  </svg>
+                                                                              </a>
+                                                                          </div>
+                                                                      </div>
+                                                                  }.into_view()
+                                                              }
+                                                          }
+                                                      } else {
+                                                          match current_view {
+                                                              ViewMode::Card => {
+                                                                  view! {
+                                                                      <article class=card_classes style=format!("order: {}", idx)>
+                                                                          <div class="card-meta">
+                                                                              <span class="source-badge">{source_display_1}</span>
+                                                                              {if job_loss {
+                                                                                  view! {
+                                                                                      <span class="job-impact-badge">
+                                                                                          {move || localize(lang.get(), "job_impact_badge")}
+                                                                                      </span>
+                                                                                  }.into_view()
+                                                                              } else {
+                                                                                  view! {
+                                                                                      <span class=cat_class_1>{category_display_1}</span>
+                                                                                  }.into_view()
+                                                                              }}
+                                                                              
+                                                                              <button 
+                                                                                  class=move || if is_fav { "favorite-btn is-fav" } else { "favorite-btn" }
+                                                                                  on:click=on_fav_toggle
+                                                                                  title=if is_fav { "Remove from favorites" } else { "Save to favorites" }
+                                                                              >
+                                                                                  <svg viewBox="0 0 24 24">
+                                                                                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                                                  </svg>
+                                                                              </button>
+                                                                          </div>
+                                                                          
+                                                                          <div class="card-content">
+                                                                              <a class="card-title" href=url_display_1.clone() target="_blank" rel="noopener noreferrer">
+                                                                                  {title_display_1}
+                                                                              </a>
+                                                                              <p class="card-summary">{summary_display}</p>
+                                                                          </div>
+                                                                          
+                                                                          <div class="card-footer">
+                                                                              <span>{date_display_1}</span>
+                                                                              <a class="read-link" href=url_display_1 target="_blank" rel="noopener noreferrer">
+                                                                                  {move || localize(lang.get(), "read")}
+                                                                                  <span class="arrow">" ->"</span>
+                                                                              </a>
+                                                                          </div>
+                                                                      </article>
+                                                                  }.into_view()
+                                                              }
+                                                              ViewMode::List => {
+                                                                  view! {
+                                                                      <div class="news-list-row" style=format!("order: {}", idx)>
+                                                                          <div class="list-cell list-title">
+                                                                              <a href=url_display_2.clone() target="_blank" rel="noopener noreferrer">
+                                                                                  {title_display_2}
+                                                                              </a>
+                                                                          </div>
+                                                                          <div class="list-cell list-category">
+                                                                              {if job_loss {
+                                                                                  view! {
+                                                                                      <span class="job-impact-badge">
+                                                                                          {move || localize(lang.get(), "job_impact_badge")}
+                                                                                      </span>
+                                                                                  }.into_view()
+                                                                              } else {
+                                                                                  view! { <span class=cat_class_2>{category_display_2}</span> }.into_view()
+                                                                              }}
+                                                                          </div>
+                                                                          <div class="list-cell list-source">
+                                                                              <span class="source-badge">{source_display_2}</span>
+                                                                          </div>
+                                                                          <div class="list-cell list-date">
+                                                                              <span class="date-text">{date_display_2}</span>
+                                                                          </div>
+                                                                          <div class="list-cell list-actions">
+                                                                              <button 
+                                                                                  class=move || if is_fav { "favorite-btn is-fav" } else { "favorite-btn" }
+                                                                                  on:click=on_fav_toggle
+                                                                                  title=if is_fav { "Remove from favorites" } else { "Save to favorites" }
+                                                                              >
+                                                                                  <svg viewBox="0 0 24 24">
+                                                                                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                                                  </svg>
+                                                                              </button>
+                                                                              <a class="read-link-icon" href=url_display_2 target="_blank" rel="noopener noreferrer" title="Read Article">
+                                                                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                                                                      <polyline points="15 3 21 3 21 9" />
+                                                                                      <line x1="10" y1="14" x2="21" y2="3" />
+                                                                                  </svg>
+                                                                              </a>
+                                                                          </div>
+                                                                      </div>
+                                                                  }.into_view()
+                                                              }
+                                                          }
+                                                      }
+                                                  }).collect::<Vec<_>>();
                                                  
                                                  view! {
                                                      {header}

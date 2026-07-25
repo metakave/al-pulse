@@ -602,26 +602,9 @@ fn Home() -> impl IntoView {
 
 
 
-    // 6. Cycling mechanism: rotates card position every 60 seconds
-    let (cycle_offset, set_cycle_offset) = create_signal(0usize);
-    let (is_fading, set_is_fading) = create_signal(false);
-    
-    create_effect(move |_| {
-        if let Ok(handle) = set_interval_with_handle(move || {
-            // Step 1: Start fade out
-            set_is_fading.set(true);
-            
-            // Step 2: Cycle position and fade in after a brief delay
-            set_timeout(move || {
-                set_cycle_offset.update(|offset| *offset += 1);
-                set_is_fading.set(false);
-            }, std::time::Duration::from_millis(350));
-        }, std::time::Duration::from_secs(60)) {
-            on_cleanup(move || {
-                handle.clear();
-            });
-        }
-    });
+    // Static signals for layout stability (auto-cycling position disabled per user request)
+    let (_cycle_offset, _set_cycle_offset) = create_signal(0usize);
+    let (is_fading, _set_is_fading) = create_signal(false);
 
     // Hook to reload feed and display toast when sync finishes
     create_effect(move |_| {
@@ -794,7 +777,7 @@ fn Home() -> impl IntoView {
                                     }.into_view()
                                 } else {
                                      // 1. Pagination slice
-                                     let page_size = 21usize;
+                                     let page_size = 15usize;
                                      let mut sorted_items = items.clone();
                                      let current_col = sort_col.get();
                                      let current_order = sort_order.get();
@@ -834,12 +817,6 @@ fn Home() -> impl IntoView {
                                                  let current_p = current_page.get().min(total_pages).max(1);
                                                  let start_idx = (current_p - 1) * page_size;
                                                  let mut page_items = sorted_items.clone().into_iter().skip(start_idx).take(page_size).collect::<Vec<_>>();
-                                                 
-                                                 let page_len = page_items.len();
-                                                 if page_len > 0 {
-                                                     let offset = cycle_offset.get() % page_len;
-                                                     page_items.rotate_left(offset);
-                                                 }
                                                  
                                                  let current_view = view_mode.get();
                                                  let header = if current_view == ViewMode::List {

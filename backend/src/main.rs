@@ -130,7 +130,7 @@ async fn get_news(
     let show_archived = params.archive.unwrap_or(false);
     let ten_days_ago = chrono::Utc::now().timestamp() - 10 * 24 * 60 * 60;
 
-    let limit = if show_archived { None } else { Some(100) };
+    let limit = if show_archived { None } else { Some(300) };
     match db::get_news_items(&state.pool, params.q, params.category, favorites_only, show_archived, ten_days_ago, limit).await {
         Ok(items) => Json(items).into_response(),
         Err(e) => {

@@ -463,6 +463,7 @@ fn App() -> impl IntoView {
 
 fn category_to_slug(cat: &str) -> String {
     match cat {
+        "All" => "all".to_string(),
         "LLMs & Gen AI" => "llms-gen-ai".to_string(),
         "Robotics & Autonomous" => "robotics-autonomous".to_string(),
         "Industry & Tech Giants" => "industry-tech-giants".to_string(),
@@ -475,13 +476,14 @@ fn category_to_slug(cat: &str) -> String {
 
 fn slug_to_category(slug: &str) -> String {
     match slug {
+        "all" => "All".to_string(),
         "llms-gen-ai" => "LLMs & Gen AI".to_string(),
         "robotics-autonomous" => "Robotics & Autonomous".to_string(),
         "industry-tech-giants" => "Industry & Tech Giants".to_string(),
         "research-science" => "Research & Science".to_string(),
         "ai-ethics-policy" => "AI Ethics & Policy".to_string(),
         "ai-job-impact" => "Job Impact".to_string(),
-        _ => "All".to_string(),
+        _ => "Home".to_string(),
     }
 }
 
@@ -808,7 +810,7 @@ fn Home() -> impl IntoView {
                                      
                                      let total_items = sorted_items.len();
                                      let total_pages = (total_items + page_size - 1) / page_size;
-                                      let is_youtube_home = active_category.get() == "All" && active_tab.get() == Tab::Latest;
+                                      let is_youtube_home = active_category.get() == "Home" && active_tab.get() == Tab::Latest;
                                       
                                       view! {
                                           <div class=move || {
@@ -1210,46 +1212,68 @@ fn get_youtube_embed_url(url: &str) -> String {
     url.to_string()
 }
 
-// Global API Helper: Fetch YouTube AI news items
+// Global API Helper: Fetch news items
 async fn fetch_news(q: String, category: String, favorites: bool, archive: bool) -> Result<Vec<NewsItem>, String> {
-    let mut url = format!("{}/api/news?favorites={}&archive={}", api_base(), favorites, archive);
-    if !q.is_empty() {
-        let encoded_q = js_sys::encode_uri_component(&q);
-        let q_str: String = encoded_q.into();
-        url.push_str(&format!("&q={}", q_str));
-    }
-    if !category.is_empty() && category != "All" {
-        let encoded_cat = js_sys::encode_uri_component(&category);
-        let cat_str: String = encoded_cat.into();
-        url.push_str(&format!("&category={}", cat_str));
-    }
+    let is_youtube_home = category == "Home" && !favorites && !archive;
 
-    if let Ok(response) = Request::get(&url).send().await {
-        if response.ok() {
-            if let Ok(items) = response.json::<Vec<NewsItem>>().await {
-                let yt_items: Vec<NewsItem> = items.into_iter().filter(|i| i.source == "YouTube" || i.url.contains("youtube.com") || i.url.contains("youtu.be")).collect();
-                if !yt_items.is_empty() {
-                    return Ok(yt_items);
+    if is_youtube_home {
+        let mut url = format!("{}/api/news?favorites=false&archive=false", api_base());
+        if !q.is_empty() {
+            let encoded_q = js_sys::encode_uri_component(&q);
+            let q_str: String = encoded_q.into();
+            url.push_str(&format!("&q={}", q_str));
+        }
+
+        if let Ok(response) = Request::get(&url).send().await {
+            if response.ok() {
+                if let Ok(items) = response.json::<Vec<NewsItem>>().await {
+                    let yt_items: Vec<NewsItem> = items.into_iter().filter(|i| i.source == "YouTube" || i.url.contains("youtube.com") || i.url.contains("youtu.be")).collect();
+                    if !yt_items.is_empty() {
+                        return Ok(yt_items);
+                    }
                 }
             }
         }
-    }
 
-    // Static fallback to bundled YouTube AI videos dataset
-    let fallback_url = "/youtube_ai_videos.json";
-    if let Ok(response) = Request::get(fallback_url).send().await {
-        if response.ok() {
-            if let Ok(mut items) = response.json::<Vec<NewsItem>>().await {
-                if !q.is_empty() {
-                    let q_lower = q.to_lowercase();
-                    items.retain(|i| i.title_en.to_lowercase().contains(&q_lower) || i.title_bn.to_lowercase().contains(&q_lower));
+        // Static fallback to bundled YouTube AI videos dataset for Home
+        let fallback_url = "/youtube_ai_videos.json";
+        if let Ok(response) = Request::get(fallback_url).send().await {
+            if response.ok() {
+                if let Ok(mut items) = response.json::<Vec<NewsItem>>().await {
+                    if !q.is_empty() {
+                        let q_lower = q.to_lowercase();
+                        items.retain(|i| i.title_en.to_lowercase().contains(&q_lower) || i.title_bn.to_lowercase().contains(&q_lower));
+                    }
+                    return Ok(items);
                 }
-                return Ok(items);
             }
         }
-    }
 
-    Ok(vec![])
+        Ok(vec![])
+    } else {
+        // Classic news articles from backend /api/news for all categories, archive, and favorites
+        let mut url = format!("{}/api/news?favorites={}&archive={}", api_base(), favorites, archive);
+        if !q.is_empty() {
+            let encoded_q = js_sys::encode_uri_component(&q);
+            let q_str: String = encoded_q.into();
+            url.push_str(&format!("&q={}", q_str));
+        }
+        if !category.is_empty() && category != "All" && category != "Home" {
+            let encoded_cat = js_sys::encode_uri_component(&category);
+            let cat_str: String = encoded_cat.into();
+            url.push_str(&format!("&category={}", cat_str));
+        }
+
+        if let Ok(response) = Request::get(&url).send().await {
+            if response.ok() {
+                if let Ok(items) = response.json::<Vec<NewsItem>>().await {
+                    return Ok(items);
+                }
+            }
+        }
+
+        Ok(vec![])
+    }
 }
 
 // Global API Helper: Fetch API Status

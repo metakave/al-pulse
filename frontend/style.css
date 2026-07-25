@@ -1606,13 +1606,6 @@ body {
   padding-top: 65%; /* Taller, prominent hero video player */
 }
 
-.masonry-card-large .masonry-card-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1.4;
-  padding: 1.25rem 1.4rem;
-}
-
 .masonry-card-medium {
   border: 1px solid var(--panel-border);
   border-left: 3px solid var(--accent-color);
@@ -1620,13 +1613,6 @@ body {
 
 .masonry-card-medium .video-embed-container {
   padding-top: 56.25%; /* Standard 16:9 aspect ratio */
-}
-
-.masonry-card-medium .masonry-card-title {
-  font-size: 1.05rem;
-  font-weight: 600;
-  line-height: 1.45;
-  padding: 1rem 1.2rem;
 }
 
 .masonry-card-small {
@@ -1638,11 +1624,16 @@ body {
   padding-top: 45%; /* Compact aspect ratio */
 }
 
-.masonry-card-small .masonry-card-title {
-  font-size: 0.9rem;
-  font-weight: 500;
-  line-height: 1.4;
-  padding: 0.8rem 1rem;
+/* Uniform video title font size for all cards */
+.masonry-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.45;
+  padding: 1.1rem 1.25rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  display: block;
+  transition: color 0.2s ease;
 }
 
 .masonry-size-badge {

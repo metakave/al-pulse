@@ -940,31 +940,41 @@ fn Home() -> impl IntoView {
                                                       let date_display_1 = date_display.clone();
                                                       let date_display_2 = date_display.clone();
 
-                                                      if is_youtube_home {
-                                                          match current_view {
-                                                              ViewMode::Card => {
-                                                                  let card_size_class = match idx % 5 {
-                                                                      0 => "masonry-card masonry-card-large",
-                                                                      1 | 3 => "masonry-card masonry-card-medium",
-                                                                      _ => "masonry-card masonry-card-small",
-                                                                  };
-                                                                  view! {
-                                                                      <article class=card_size_class>
-                                                                          <div class="video-embed-container">
-                                                                              <iframe 
-                                                                                  src=embed_url.clone()
-                                                                                  title=title_display_1.clone()
-                                                                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                                                  allowfullscreen="true"
-                                                                                  loading="lazy"
-                                                                              ></iframe>
-                                                                          </div>
-                                                                          <a class="masonry-card-title" href=url_display_1 target="_blank" rel="noopener noreferrer">
-                                                                              {title_display_1}
-                                                                          </a>
-                                                                      </article>
-                                                                  }.into_view()
-                                                              }
+                                                       if is_youtube_home {
+                                                           match current_view {
+                                                               ViewMode::Card => {
+                                                                   let (card_size_class, size_badge) = match idx % 6 {
+                                                                       0 | 4 => (
+                                                                           "masonry-card masonry-card-large",
+                                                                           view! { <span class="masonry-size-badge badge-large">"🔥 TOP FEATURED"</span> }.into_view()
+                                                                       ),
+                                                                       1 | 3 => (
+                                                                           "masonry-card masonry-card-medium",
+                                                                           view! { <span class="masonry-size-badge badge-medium">"▶ TRENDING"</span> }.into_view()
+                                                                       ),
+                                                                       _ => (
+                                                                           "masonry-card masonry-card-small",
+                                                                           ().into_view()
+                                                                       ),
+                                                                   };
+                                                                   view! {
+                                                                       <article class=card_size_class>
+                                                                           {size_badge}
+                                                                           <div class="video-embed-container">
+                                                                               <iframe 
+                                                                                   src=embed_url.clone()
+                                                                                   title=title_display_1.clone()
+                                                                                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                                   allowfullscreen="true"
+                                                                                   loading="lazy"
+                                                                               ></iframe>
+                                                                           </div>
+                                                                           <a class="masonry-card-title" href=url_display_1 target="_blank" rel="noopener noreferrer">
+                                                                               {title_display_1}
+                                                                           </a>
+                                                                       </article>
+                                                                   }.into_view()
+                                                               }
                                                               ViewMode::List => {
                                                                   view! {
                                                                       <div class="news-list-row" style=format!("order: {}", idx)>

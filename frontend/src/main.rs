@@ -13,11 +13,14 @@ struct NewsItem {
     title_bn: String,
     url: String,
     source: String,
+    #[serde(default)]
     summary_en: Option<String>,
+    #[serde(default)]
     summary_bn: Option<String>,
     category: String,
     published_at: i64,
     created_at: i64,
+    #[serde(default)]
     is_favorite: bool,
 }
 
@@ -541,7 +544,7 @@ fn Home() -> impl IntoView {
         if let Some(slug) = params.get().get("category") {
             slug_to_category(slug)
         } else {
-            "All".to_string()
+            "Home".to_string()
         }
     });
     let (current_page, set_current_page) = create_signal(1usize);
